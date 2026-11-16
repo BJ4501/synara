@@ -56,16 +56,33 @@ import {
   serverSettingsToAppSettings,
 } from "./appSettings";
 
-describe("retired interface language preference", () => {
-  it("ignores a stored language choice without resetting other settings", () => {
-    for (const language of ["system", "en", "es", "zh-CN", "fr", 42, null, { code: "es" }]) {
+describe("interface language preference", () => {
+  it("persists Follow system, English, and Simplified Chinese without resetting other settings", () => {
+    for (const language of ["system", "en", "zh-CN"] as const) {
       const settings = Schema.decodeUnknownSync(AppSettingsSchema)({
         language,
         chatFontSizePx: 15,
       });
-      expect(settings).not.toHaveProperty("language");
+      expect(settings.language).toBe(language);
       expect(settings.chatFontSizePx).toBe(15);
     }
+  });
+
+  it("treats unsupported stored language values as Follow system without resetting other settings", () => {
+    for (const language of ["es", "fr", "zh-Hant", 42, null, { code: "es" }]) {
+      const settings = Schema.decodeUnknownSync(AppSettingsSchema)({
+        language,
+        chatFontSizePx: 15,
+      });
+      expect(settings.language).toBe("system");
+      expect(settings.chatFontSizePx).toBe(15);
+    }
+  });
+
+  it("keeps the interface language as a local preference rather than a server setting", () => {
+    expect(appSettingsPatchToServerSettingsPatch({ language: "zh-CN" })).toEqual({});
+    expect(appSettingsPatchToServerSettingsPatch({ language: "en" })).toEqual({});
+    expect(appSettingsPatchToServerSettingsPatch({ language: "system" })).toEqual({});
   });
 });
 

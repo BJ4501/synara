@@ -152,6 +152,7 @@ contextBridge.exposeInMainWorld("desktopBridge", {
   productAnalytics: productAnalyticsBridge,
   ...(betaDiagnosticsBridge ? { betaDiagnostics: betaDiagnosticsBridge } : {}),
   getWsUrl: getDesktopWsUrl,
+  getSystemLanguages: () => ipcRenderer.sendSync(IPC.getSystemLanguages),
   whenBackendReady: () => ipcRenderer.invoke(IPC.backendReady),
   remoteResourceUrl: (hostId, reference) =>
     ipcRenderer.sendSync(IPC.remoteResourceUrl, hostId, reference),
@@ -168,6 +169,7 @@ contextBridge.exposeInMainWorld("desktopBridge", {
   saveFile: (input) => ipcRenderer.invoke(IPC.saveFile, input),
   confirm: (message) => ipcRenderer.invoke(IPC.confirm, message),
   setTheme: (theme) => ipcRenderer.invoke(IPC.setTheme, theme),
+  setLanguagePreference: (preference) => ipcRenderer.invoke(IPC.setLanguagePreference, preference),
   setWindowMaterial: (input) => ipcRenderer.invoke(IPC.setWindowMaterial, input),
   ...(windowTranslucency ? { windowTranslucency } : {}),
   getAppIcon: () => ipcRenderer.invoke(IPC.getAppIcon),

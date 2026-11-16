@@ -1222,5 +1222,8 @@
   "image_retryPreview": "Retry image preview",
   "appSnapHeroAddedToChat": "Added to chat",
   "account_viewPublicProfile": "View public profile",
-  "account_makeYourProfilePublic": "Make your profile public"
+  "account_makeYourProfilePublic": "Make your profile public",
+  "language": "language",
+  "general_languageAria": "Language",
+  "languageFollowSystem": "Follow system"
 }

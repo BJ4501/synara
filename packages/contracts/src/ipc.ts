@@ -16,6 +16,7 @@ import type {
 } from "./editorDebug";
 import type { EditorIntelligenceInput, EditorIntelligenceResult } from "./editorIntelligence";
 import { Schema } from "effect";
+import { UiLanguagePreference } from "./uiLocale";
 import type {
   LoadProjectImportHistoryInput,
   LoadProjectImportHistoryResult,
@@ -474,6 +475,8 @@ export type DesktopUpdateStatus =
 
 export type DesktopRuntimeArch = "arm64" | "x64" | "other";
 export type DesktopTheme = "light" | "dark" | "system";
+export const DesktopLanguagePreference = UiLanguagePreference;
+export type DesktopLanguagePreference = typeof DesktopLanguagePreference.Type;
 
 /** Largest desktop blur radius the translucent window shell accepts, in points. */
 export const DESKTOP_WINDOW_BLUR_RADIUS_MAX = 64;
@@ -1079,6 +1082,8 @@ export interface DesktopBridge {
   }) => Promise<string | null>;
   confirm: (message: string) => Promise<boolean>;
   setTheme: (theme: DesktopTheme) => Promise<void>;
+  setLanguagePreference?: (preference: DesktopLanguagePreference) => Promise<void>;
+  getSystemLanguages?: () => readonly string[];
   /** macOS only; resolves false when the adjustable blur is unavailable. */
   setWindowMaterial?: (input: DesktopWindowMaterial) => Promise<boolean>;
   /**

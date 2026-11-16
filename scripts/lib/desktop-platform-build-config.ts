@@ -10,6 +10,7 @@ import {
   SYNARA_STABLE_WINDOWS_INSTALLER_GUID,
 } from "@synara/shared/betaChannel";
 import type { SynaraPackagedDesktopFlavor } from "@synara/shared/desktopIdentity";
+import { UI_LOCALES } from "@synara/shared/uiLocale";
 
 import {
   createDesktopBundleFilePatterns,
@@ -81,6 +82,13 @@ export interface DesktopNativeBuildHostInput {
   readonly hostArch: string;
   readonly hostPlatform: NodeJS.Platform;
   readonly platform: "linux" | "mac" | "win";
+}
+
+export function shouldDisablePackagedDesktopUpdateFeed(input: {
+  readonly usesScriptedUpdates: boolean;
+  readonly disableAutoUpdate: boolean;
+}): boolean {
+  return input.usesScriptedUpdates || input.disableAutoUpdate;
 }
 
 export function validateDesktopNativeBuildHost(input: DesktopNativeBuildHostInput): string | null {
@@ -220,6 +228,13 @@ export function createDesktopPlatformBuildConfig(
           from: MAC_ICON_ASSETS_CAR_STAGE_PATH,
           to: MAC_ICON_ASSETS_CAR_BUNDLE_PATH,
         },
+        ...UI_LOCALES.map((locale) => {
+          const directory = `${locale === "zh-CN" ? "zh-Hans" : locale}.lproj`;
+          return {
+            from: `apps/desktop/resources/localizations/${directory}`,
+            to: `Resources/${directory}`,
+          };
+        }),
       ],
       mac,
     };

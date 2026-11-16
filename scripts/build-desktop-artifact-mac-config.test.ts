@@ -21,6 +21,7 @@ import {
   MAC_WINDOW_MATERIAL_ADDON_ASAR_EXCLUSION,
   AUDIO_CAPTURE_USAGE_DESCRIPTION,
   MICROPHONE_USAGE_DESCRIPTION,
+  shouldDisablePackagedDesktopUpdateFeed,
   validateDesktopNativeBuildHost,
   WINDOWS_INSTALLER_GUID,
 } from "./lib/desktop-platform-build-config.ts";
@@ -36,6 +37,40 @@ it("loads the desktop artifact CLI with native Node before packaging", () => {
 });
 
 describe("createDesktopPlatformBuildConfig", () => {
+  it("bundles app-authored English and Simplified Chinese permission descriptions on every flavor", () => {
+    for (const flavor of SYNARA_PACKAGED_DESKTOP_FLAVORS) {
+      const config = createDesktopPlatformBuildConfig({ platform: "mac", target: "dir", flavor });
+      const folders = config.extraFiles?.map((entry) => entry.to);
+      assert.ok(folders?.includes("Resources/en.lproj"));
+      assert.ok(folders?.includes("Resources/zh-Hans.lproj"));
+      assert.equal(folders?.includes("Resources/es.lproj"), false);
+    }
+  });
+
+  it("omits the packaged updater feed for scripted or explicitly isolated custom builds", () => {
+    assert.equal(
+      shouldDisablePackagedDesktopUpdateFeed({
+        usesScriptedUpdates: false,
+        disableAutoUpdate: false,
+      }),
+      false,
+    );
+    assert.equal(
+      shouldDisablePackagedDesktopUpdateFeed({
+        usesScriptedUpdates: true,
+        disableAutoUpdate: false,
+      }),
+      true,
+    );
+    assert.equal(
+      shouldDisablePackagedDesktopUpdateFeed({
+        usesScriptedUpdates: false,
+        disableAutoUpdate: true,
+      }),
+      true,
+    );
+  });
+
   it("isolates Remote's Windows installer registration and Linux executable", () => {
     const remote = createDesktopPlatformBuildConfig({
       platform: "win",
@@ -160,6 +195,11 @@ describe("createDesktopPlatformBuildConfig", () => {
       {
         from: MAC_ICON_ASSETS_CAR_STAGE_PATH,
         to: MAC_ICON_ASSETS_CAR_BUNDLE_PATH,
+      },
+      { from: "apps/desktop/resources/localizations/en.lproj", to: "Resources/en.lproj" },
+      {
+        from: "apps/desktop/resources/localizations/zh-Hans.lproj",
+        to: "Resources/zh-Hans.lproj",
       },
     ]);
     assert.equal(MAC_ICON_ASSETS_CAR_STAGE_PATH, "apps/desktop/resources/Assets.car");

@@ -29,6 +29,7 @@ import {
   MAC_ICON_ASSET_NAME,
   MAC_ICON_COMPOSER_DEPLOYMENT_TARGET,
   MAC_WINDOW_MATERIAL_ADDON_STAGE_PATH,
+  shouldDisablePackagedDesktopUpdateFeed,
   validateDesktopNativeBuildHost,
 } from "./lib/desktop-platform-build-config.ts";
 import { stageCloudflared } from "./lib/cloudflared.ts";
@@ -854,13 +855,19 @@ const installFrozenStageDependencies = Effect.fn("installFrozenStageDependencies
     // install already passed. Its --production flag also forces frozen mode,
     // so use the equivalent dependency omission and allow only the temporary
     // staging copy to update; the verified source lockfile remains untouched.
+    // Linux-hosted custom Windows NSIS builds must fetch win32 optional
+    // binaries; official releases still package on windows-2022.
+    const cpu = arch === "universal" ? "*" : arch;
+    const winInstall = ChildProcess.make({
+      cwd: stageAppDir,
+      ...commandOutputOptions(verbose),
+      // Windows needs shell mode to resolve .cmd shims (e.g. bun.cmd).
+      shell: process.platform === "win32",
+    });
     yield* runCommand(
-      ChildProcess.make({
-        cwd: stageAppDir,
-        ...commandOutputOptions(verbose),
-        // Windows needs shell mode to resolve .cmd shims (e.g. bun.cmd).
-        shell: process.platform === "win32",
-      })`bun install --omit=dev --ignore-scripts --linker hoisted`,
+      process.platform === "win32"
+        ? winInstall`bun install --omit=dev --ignore-scripts --linker hoisted`
+        : winInstall`bun install --omit=dev --ignore-scripts --linker hoisted --os=win32 --cpu=${cpu}`,
     );
   } else {
     // Optional per-CPU packages (Claude SDK, esbuild, msgpackr) must match the
@@ -915,11 +922,20 @@ const createBuildConfig = Effect.fn("createBuildConfig")(function* (
       buildResources: "apps/desktop/resources",
     },
     forceCodeSigning: signed,
+    // Official Windows NSIS builds run on windows-2022 and rebuild native
+    // modules there. Linux-hosted custom packaging cannot cross-compile with
+    // node-gyp; it uses the win32 optional binaries fetched for the target.
+    ...(platform === "win" && process.platform !== "win32" ? { npmRebuild: false } : {}),
   };
   const publishConfig = resolveGitHubPublishConfig();
-  if (artifactIdentity.identity.usesScriptedUpdates) {
-    // Experimental bundles must never contain a Stable updater feed, even
-    // when built from a shell used by the release workflow.
+  if (
+    shouldDisablePackagedDesktopUpdateFeed({
+      usesScriptedUpdates: artifactIdentity.identity.usesScriptedUpdates,
+      disableAutoUpdate: process.env.SYNARA_DISABLE_AUTO_UPDATE === "1",
+    })
+  ) {
+    // Experimental bundles and custom installers must never contain a Stable
+    // updater feed, even when built from a shell used by the release workflow.
     buildConfig.publish = null;
   } else if (publishConfig) {
     buildConfig.publish = [publishConfig];

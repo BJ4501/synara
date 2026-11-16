@@ -113,6 +113,7 @@ export const ROW_EXTRA_KEYWORDS: Readonly<Record<string, readonly string[]>> = {
     "settings:chooseTheProviderUsedForNewChatsAgentCodex",
     "default provider default agent default account",
   ],
+  "setting-language": ["settings:languageSearchKeywords"],
   "setting-new-threads": ["settings:pickTheDefaultWorkspaceModeForNewlyCreatedDraft2"],
   "setting-delete-worktree-on-archive": ["settings:afterArchiveSUndoPeriodRemoveACleanWorktree2"],
   "setting-move-sent-messages-to-top": ["settings:moveEachSentMessageToTheTopOfThe2"],

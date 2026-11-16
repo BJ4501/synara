@@ -1268,5 +1268,7 @@
   "general_newChatAccount": "Agent and account",
   "general_newChatAccountDescription": "New chats start on this account until you pick another in the model picker. After that they reuse your most recent choice.",
   "general_newChatAccountResetLabel": "agent and account",
-  "general_newChatAccountChoose": "Choose an enabled account"
+  "general_newChatAccountChoose": "Choose an enabled account",
+  "chooseTheLanguageUsedByTheInterfaceSystemFollows": "Choose the language used by the interface. Follow system uses your browser or device language.",
+  "languageSearchKeywords": "language locale 语言 简体中文 chinese english follow system interface"
 }
