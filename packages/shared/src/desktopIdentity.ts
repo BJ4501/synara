@@ -32,6 +32,8 @@ export const SYNARA_ZH_CN_DESKTOP_ORIGIN = `${SYNARA_ZH_CN_DESKTOP_SCHEME}://app
 export const SYNARA_ZH_CN_DESKTOP_ENTRY_URL = `${SYNARA_ZH_CN_DESKTOP_ORIGIN}/index.html`;
 export const SYNARA_ZH_CN_WINDOWS_INSTALLER_GUID = "b7e4c1a9-2d58-4f0b-9c6e-8a13f5d20471";
 export const SYNARA_ZH_CN_HOME_ENV = "SYNARA_ZH_CN_HOME";
+/** Replacement NSIS product version; must sort above the broken 1.6.0 payload for in-place upgrade. */
+export const SYNARA_ZH_CN_WINDOWS_INSTALLER_VERSION = "1.6.1";
 export const SYNARA_SOURCE_DESKTOP_BUILD_MARKER = "synara-source-desktop-build-v2";
 export const SYNARA_DESKTOP_SMOKE_USER_DATA_ENV = "SYNARA_DESKTOP_SMOKE_USER_DATA";
 
@@ -260,4 +262,16 @@ export function synaraSourceDesktopIdentity(
     displayName: `${identity.displayName} (Source)`,
     bundleId: `${identity.bundleId}.source`,
   };
+}
+
+/** Renderer Origin values for every packaged desktop flavor. Custom schemes are opaque to `URL.origin`. */
+export function synaraPackagedDesktopAppOrigins(): readonly string[] {
+  return SYNARA_PACKAGED_DESKTOP_FLAVORS.map((flavor) => synaraDesktopIdentity(flavor).origin);
+}
+
+export function isSynaraPackagedDesktopAppScheme(protocol: string): boolean {
+  const scheme = protocol.endsWith(":") ? protocol.slice(0, -1) : protocol;
+  return SYNARA_PACKAGED_DESKTOP_FLAVORS.some(
+    (flavor) => synaraDesktopIdentity(flavor).scheme === scheme,
+  );
 }

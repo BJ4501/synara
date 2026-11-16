@@ -761,6 +761,44 @@ describe("websocket RPC payload admission", () => {
     }
   });
 
+  it("admits the custom zh-CN desktop origin to HTTP negotiate and the WebSocket upgrade", async () => {
+    const server = await startTestServer();
+    const origin = "synara-zh-cn://app";
+    try {
+      const desktop = await fetch(negotiateHttpUrl(server), { headers: { origin } });
+      expect(desktop.status).toBe(200);
+      expect(desktop.headers.get("access-control-allow-origin")).toBe(origin);
+
+      const lookalike = await fetch(negotiateHttpUrl(server), {
+        headers: { origin: "synara-zh-cn://app.evil.com" },
+      });
+      expect(lookalike.status).toBe(403);
+      expect(lookalike.headers.get("access-control-allow-origin")).toBeNull();
+
+      const rejectedSession = await Effect.runPromise(server.sessions.issue());
+      const rejectedTicket = await Effect.runPromise(
+        server.sessions.issueWebSocketToken(rejectedSession.sessionId),
+      );
+      await expect(
+        connect(featureSocketUrl(server, rejectedTicket.token), {
+          headers: { origin: "synara-zh-cn://app.evil.com" },
+        }),
+      ).rejects.toMatchObject({ statusCode: 403 });
+
+      const admittedSession = await Effect.runPromise(server.sessions.issue());
+      const admittedTicket = await Effect.runPromise(
+        server.sessions.issueWebSocketToken(admittedSession.sessionId),
+      );
+      const admittedSocket = await connect(featureSocketUrl(server, admittedTicket.token), {
+        headers: { origin },
+      });
+      expect(admittedSocket.readyState).toBe(WebSocket.OPEN);
+      await ping(admittedSocket);
+    } finally {
+      await server.close();
+    }
+  });
+
   it("lets desktop renderers read remote negotiation while retaining origin and owner admission", async () => {
     const remote = new WebSocketServer({ host: "127.0.0.1", port: 0 });
     await once(remote, "listening");

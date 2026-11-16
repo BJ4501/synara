@@ -40,7 +40,10 @@ import {
   SYNARA_PACKAGED_DESKTOP_FLAVORS,
   type SynaraPackagedDesktopFlavor,
 } from "@synara/shared/desktopIdentity";
-import { createDesktopArtifactIdentity } from "./lib/desktop-artifact-identity.ts";
+import {
+  createDesktopArtifactIdentity,
+  resolveDesktopArtifactVersion,
+} from "./lib/desktop-artifact-identity.ts";
 import { parseBooleanEnvValue } from "./lib/env-bool.ts";
 import { finalizeSignedMacDmg, rebuildUnsignedMacDmg } from "./lib/mac-dmg-finalize.ts";
 import { finalizeMacUpdateZip } from "./lib/mac-update-zip-finalize.ts";
@@ -1166,7 +1169,11 @@ const buildDesktopArtifact = Effect.fn("buildDesktopArtifact")(function* (
       }),
   });
 
-  const appVersion = options.version ?? serverPackageJson.version;
+  const appVersion = resolveDesktopArtifactVersion({
+    flavor: options.flavor,
+    explicitVersion: options.version,
+    packageVersion: serverPackageJson.version,
+  });
   const hasSourceCommit = options.sourceCommit !== undefined;
   const hasLockfileSha256 = options.lockfileSha256 !== undefined;
   const exactProvenanceRequested =

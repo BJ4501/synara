@@ -28,6 +28,7 @@ describe("clipboard permissions", () => {
     "synara-cua://app",
     "synara-beta://app",
     "synara-remote://app",
+    "synara-zh-cn://app",
   ])("allows foreground copy buttons on the %s desktop origin", (origin) => {
     const url = `${origin}/index.html`;
     expect(

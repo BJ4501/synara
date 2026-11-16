@@ -367,6 +367,7 @@ export function createPackagedDesktopSmokeEnvironment(
     SYNARA_HOME: join(root, "synara-home"),
     SYNARA_BETA_HOME: join(root, "synara-beta-home"),
     SYNARA_REMOTE_HOME: join(root, "synara-remote-home"),
+    SYNARA_ZH_CN_HOME: join(root, "synara-zh-cn-home"),
     SYNARA_DISABLE_AUTO_UPDATE: "1",
     ELECTRON_ENABLE_LOGGING: "1",
   };
@@ -384,6 +385,7 @@ export function createPackagedDesktopSmokeEnvironment(
     env.SYNARA_HOME,
     env.SYNARA_BETA_HOME,
     env.SYNARA_REMOTE_HOME,
+    env.SYNARA_ZH_CN_HOME,
   ]) {
     if (path) mkdirSync(path, { recursive: true });
   }

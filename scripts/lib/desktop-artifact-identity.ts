@@ -1,6 +1,7 @@
 // FILE: desktop-artifact-identity.ts
 // Purpose: Keeps packaged metadata, native identity and artifact names aligned.
 import {
+  SYNARA_ZH_CN_WINDOWS_INSTALLER_VERSION,
   synaraDesktopIdentity,
   type SynaraPackagedDesktopFlavor,
 } from "@synara/shared/desktopIdentity";
@@ -37,4 +38,18 @@ export function createDesktopArtifactIdentity(input: {
     },
     releaseDirectoryName: `release${suffix}`,
   };
+}
+
+/** zh-CN 1.6.0 was the broken splash/timeout payload; the replacement must sort above it. */
+export function resolveDesktopArtifactVersion(input: {
+  readonly flavor: SynaraPackagedDesktopFlavor;
+  readonly explicitVersion?: string | undefined;
+  readonly packageVersion: string;
+}): string {
+  const explicit = input.explicitVersion?.trim();
+  if (explicit) return explicit;
+  if (input.flavor === "zh-cn" && input.packageVersion === "1.6.0") {
+    return SYNARA_ZH_CN_WINDOWS_INSTALLER_VERSION;
+  }
+  return input.packageVersion;
 }

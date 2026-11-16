@@ -20,10 +20,14 @@ import {
   SYNARA_DESKTOP_ORIGIN,
   SYNARA_DESKTOP_UPDATE_CHANNEL,
   SYNARA_DEVELOPMENT_BUNDLE_ID,
+  SYNARA_PACKAGED_DESKTOP_FLAVORS,
   SYNARA_PRODUCTION_BUNDLE_ID,
   SYNARA_REMOTE_BUNDLE_ID,
   SYNARA_ZH_CN_BUNDLE_ID,
+  SYNARA_ZH_CN_WINDOWS_INSTALLER_VERSION,
+  isSynaraPackagedDesktopAppScheme,
   synaraDesktopIdentity,
+  synaraPackagedDesktopAppOrigins,
   synaraSourceDesktopIdentity,
 } from "./desktopIdentity";
 
@@ -195,6 +199,13 @@ describe("desktopIdentity", () => {
     );
     expect(synaraSourceDesktopIdentity(synaraDesktopIdentity("zh-cn")).bundleId).toBe(
       `${SYNARA_ZH_CN_BUNDLE_ID}.source`,
+    );
+    expect(SYNARA_ZH_CN_WINDOWS_INSTALLER_VERSION).toBe("1.6.1");
+    expect(synaraPackagedDesktopAppOrigins()).toContain("synara-zh-cn://app");
+    expect(isSynaraPackagedDesktopAppScheme("synara-zh-cn:")).toBe(true);
+    expect(isSynaraPackagedDesktopAppScheme("synara-zh-cns:")).toBe(false);
+    expect(synaraPackagedDesktopAppOrigins()).toEqual(
+      SYNARA_PACKAGED_DESKTOP_FLAVORS.map((flavor) => synaraDesktopIdentity(flavor).origin),
     );
   });
 
