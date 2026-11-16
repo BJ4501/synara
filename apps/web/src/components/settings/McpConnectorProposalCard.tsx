@@ -5,6 +5,7 @@ import { DisclosureChevron } from "~/components/ui/DisclosureChevron";
 import { DisclosureRegion } from "~/components/ui/DisclosureRegion";
 import { ProposalActions } from "~/components/ui/proposal-actions";
 import { MCP_CONNECTORS_QUERY_KEY } from "~/lib/mcpConnectorsReactQuery";
+import { useTranslation } from "~/i18n";
 import { ensureNativeApi } from "~/nativeApi";
 import {
   MCP_CONNECTOR_CARD_CLASS_NAME,
@@ -23,6 +24,7 @@ export function mcpConnectorProposalsQueryOptions() {
 }
 
 export function McpConnectorProposalCard({ proposalId }: { proposalId: string }) {
+  const { t } = useTranslation();
   const [reviewingId, setReviewingId] = useState<string | null>(null);
   const detailsId = useId();
   const client = useQueryClient();
@@ -44,8 +46,8 @@ export function McpConnectorProposalCard({ proposalId }: { proposalId: string })
     return (
       <p className="text-ui-sm text-muted-foreground">
         {query.isError
-          ? "Open Connectors on the owning computer to review this proposal."
-          : "Loading connector proposal…"}
+          ? t("settings:mcp_openConnectorsOnOwner")
+          : t("settings:mcp_loadingProposal")}
       </p>
     );
   const connector = proposal.connector;
@@ -54,14 +56,14 @@ export function McpConnectorProposalCard({ proposalId }: { proposalId: string })
   return (
     <section
       className={`${MCP_CONNECTOR_CARD_CLASS_NAME} w-full max-w-xl`}
-      aria-label={`${connector.name} connector proposal`}
+      aria-label={`${connector.name} ${t("settings:mcp_connectorProposal")}`}
     >
       <McpConnectorCardHeader connector={connector} />
       {pending ? (
         <p className="mt-4 text-ui-sm text-muted-foreground">
           {proposal.action === "remove"
-            ? `Remove ${connector.name} from Synara and stop access from its chats.`
-            : `Connect ${connector.name} to use its tools in new chats.`}
+            ? t("settings:mcp_removeFromSynara")
+            : t("settings:mcp_connectToUseTools")}
         </p>
       ) : null}
       {reviewOpen ? (
@@ -74,7 +76,7 @@ export function McpConnectorProposalCard({ proposalId }: { proposalId: string })
           onClick={() => setReviewingId(null)}
           className="mt-4"
         >
-          Connection details
+          {t("settings:mcp_connectionDetails")}
           <DisclosureChevron open={reviewOpen} className="size-3.5" />
         </Button>
       ) : null}
@@ -82,15 +84,15 @@ export function McpConnectorProposalCard({ proposalId }: { proposalId: string })
         <div id={detailsId} className="space-y-4 pt-4">
           {proposal.source ? (
             <p className="text-ui-sm text-muted-foreground [overflow-wrap:anywhere]">
-              Found in {proposal.source}
+              {t("settings:mcp_foundIn", { value0: proposal.source })}
             </p>
           ) : null}
           <McpConnectorDetails connector={connector} />
           {proposal.action === "add" ? (
             <p className="text-ui-sm text-muted-foreground">
               {connector.transport === "stdio"
-                ? "Approval runs this command on this computer. Its tools become available in new chats."
-                : "Approval connects to this URL and opens OAuth sign-in if required. Its tools become available in new chats."}
+                ? t("settings:mcp_approvalRunsCommand")
+                : t("settings:mcp_approvalConnectsUrl")}
             </p>
           ) : null}
         </div>
@@ -116,16 +118,16 @@ export function McpConnectorProposalCard({ proposalId }: { proposalId: string })
         <p className="mt-4 text-ui-sm text-muted-foreground">
           {proposal.state === "accepted"
             ? proposal.action === "remove"
-              ? "Connector removed"
-              : "Approved · available in new chats after connection"
-            : "Dismissed"}
+              ? t("settings:mcp_connectorRemoved")
+              : t("settings:mcp_approvedAvailable")
+            : t("settings:mcp_dismissed")}
         </p>
       )}
       {mutation.isError ? (
         <p role="alert" className="mt-3 text-ui-sm text-destructive">
           {mutation.error instanceof Error
             ? mutation.error.message
-            : "Could not apply this proposal."}
+            : t("settings:mcp_couldNotApply")}
         </p>
       ) : null}
     </section>

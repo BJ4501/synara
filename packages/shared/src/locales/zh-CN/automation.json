@@ -197,5 +197,8 @@
   "intentOnceAt": "在 {{time}} 运行一次",
   "intentDailyAt": "每天 {{time}}",
   "intentWeekdaysAt": "工作日 {{time}}",
-  "intentWeeklyAt": "每周 {{time}}"
+  "intentWeeklyAt": "每周 {{time}}",
+  "runOnComputer": "在 {{value0}} 上运行。请让 Synara 在该电脑上保持运行。",
+  "thisComputerMustStayAwake": "此电脑必须保持唤醒并运行 Synara。其他电脑可以关闭。",
+  "addProjectBeforeAutomation": "创建自动化之前，请先在此电脑上添加项目。"
 }

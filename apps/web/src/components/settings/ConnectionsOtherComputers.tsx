@@ -8,6 +8,7 @@ import type { AccountHost } from "@synara/contracts";
 import { useCallback, useState } from "react";
 
 import { useHostConnections, useHosts } from "~/hooks/useHosts";
+import { useTranslation } from "~/i18n";
 import { accountErrorMessage } from "~/lib/accountLogic";
 import { activateHost, deactivateHost, readActiveHost } from "~/lib/hosts/activeHost";
 import { readExecutionContext } from "~/lib/hosts/executionContext";
@@ -28,6 +29,7 @@ import { SettingsCard, SettingsListRow, SettingsSectionShell } from "./SettingsP
 
 /** Rendered only when signed in with remote connections available. */
 export function ConnectionsOtherComputers() {
+  const { t } = useTranslation();
   const remote = useHosts({ enabled: true });
   const connections = useHostConnections({ enabled: true });
   const activeHost = readActiveHost();
@@ -142,41 +144,41 @@ export function ConnectionsOtherComputers() {
   return (
     <>
       <SettingsSectionShell
-        title="Computers you can control"
+        title="settings:conn_computersYouCanControl"
         action={
           <div className="flex items-center gap-1.5">
-            <IconButton label="Refresh" variant="ghost" onClick={refresh}>
+            <IconButton label={t("common:actionRefresh")} variant="ghost" onClick={refresh}>
               <RotateCcwIcon className="size-3.5" />
             </IconButton>
             <Button size="xs" shape="capsule" onClick={() => setAddOpen(true)}>
-              Add
+              {t("common:actionAdd")}
             </Button>
           </div>
         }
       >
         <SettingsCard>
           {remote.hostsQuery.isPending || connections.connectionsQuery.isPending ? (
-            <SettingsListRow title={<Muted>Loading computers…</Muted>} />
+            <SettingsListRow title={<Muted>{t("settings:conn_loadingComputers")}</Muted>} />
           ) : hostsError ? (
             <SettingsListRow
-              title="Computers unavailable"
+              title={t("settings:conn_computersUnavailable")}
               description={
                 <span className="text-destructive">
                   {hostsError instanceof HostsUnsupportedError
-                    ? "This Synara server is too old to manage hosts. Update it and try again."
+                    ? t("settings:conn_serverTooOld")
                     : accountErrorMessage(hostsError, "Could not load your computers.")}
                 </span>
               }
             />
           ) : pairedHosts === undefined ? (
             <SettingsListRow
-              title="Update Synara on this computer"
-              description="Update and restart the app to list your paired computers."
+              title={t("settings:conn_updateSynaraOnThisComputer")}
+              description={t("settings:conn_updateRestartToList")}
             />
           ) : hosts.length === 0 ? (
             <SettingsListRow
-              title={<Muted>No other computers yet</Muted>}
-              description="Click Add and enter a pairing code from the other computer."
+              title={<Muted>{t("settings:conn_noOtherComputers")}</Muted>}
+              description={t("settings:conn_clickAddPairing")}
             />
           ) : (
             hosts.map((host) => {
@@ -220,7 +222,7 @@ export function ConnectionsOtherComputers() {
         </SettingsCard>
       </SettingsSectionShell>
 
-      <SettingsSectionShell title="This window">
+      <SettingsSectionShell title="settings:conn_thisWindow">
         <SettingsCard className="p-1">
           <HostConnectionControl />
         </SettingsCard>

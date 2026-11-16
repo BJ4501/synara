@@ -75,6 +75,7 @@ export const UI_LITERAL_ALLOWLIST: Readonly<Record<string, string>> = {
   omp: "CLI executable",
   "you@company.com": "Email address placeholder example",
   handle: "Public profile handle placeholder",
+  "@username": "Public profile handle placeholder example",
   "ABCD-EFGH": "Device pairing code example",
   "ABCD-2345": "Device pairing code example",
   "ABC-234": "Sync pairing code example",

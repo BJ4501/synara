@@ -15,6 +15,7 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { FolderIcon } from "~/lib/icons";
 import { notifyNativeSurfaceOcclusionChange } from "../nativeSurfaceOcclusion";
+import { useTranslation } from "~/i18n";
 
 type PickerOptions = {
   label: string;
@@ -26,6 +27,7 @@ export function ExecutionFolderPicker({
   browse,
   onClose,
 }: PickerOptions & { onClose: (path: string | null) => void }) {
+  const { t } = useTranslation();
   const pathId = useId();
   useEffect(() => {
     notifyNativeSurfaceOcclusionChange();
@@ -80,8 +82,8 @@ export function ExecutionFolderPicker({
     >
       <DialogPopup>
         <DialogHeader>
-          <DialogTitle>Choose a folder on {label}</DialogTitle>
-          <DialogDescription>Select an existing folder on this host.</DialogDescription>
+          <DialogTitle>{t("settings:hosts_chooseFolderOn", { value0: label })}</DialogTitle>
+          <DialogDescription>{t("settings:hosts_selectExistingFolder")}</DialogDescription>
         </DialogHeader>
         <DialogPanel className="space-y-3">
           <form
@@ -93,7 +95,7 @@ export function ExecutionFolderPicker({
           >
             <div className="min-w-0 flex-1 space-y-1.5">
               <label htmlFor={pathId} className="text-ui-sm text-muted-foreground">
-                Folder path
+                {t("settings:hosts_folderPath")}
               </label>
               <Input
                 id={pathId}
@@ -107,7 +109,7 @@ export function ExecutionFolderPicker({
               />
             </div>
             <Button type="submit" variant="outline" disabled={!path.trim()}>
-              Go
+              {t("settings:hosts_go")}
             </Button>
           </form>
           <div className="flex items-center justify-between gap-2">
@@ -115,7 +117,10 @@ export function ExecutionFolderPicker({
               className="min-w-0 truncate text-ui-sm text-muted-foreground"
               title={listing?.parentPath}
             >
-              {listing?.parentPath ?? (error ? "Folder unavailable" : "Loading folders…")}
+              {listing?.parentPath ??
+                (error
+                  ? t("settings:hosts_folderUnavailable")
+                  : t("settings:hosts_loadingFolders"))}
             </p>
             <Button
               variant="ghost"
@@ -123,7 +128,7 @@ export function ExecutionFolderPicker({
               disabled={!listing || /^[\\/]+$|^[A-Za-z]:[\\/]?$/.test(listing.parentPath)}
               onClick={() => listing && openFolder(`${listing.parentPath}/..`)}
             >
-              Up
+              {t("settings:hosts_up")}
             </Button>
           </div>
           {error ? (
@@ -133,7 +138,7 @@ export function ExecutionFolderPicker({
           ) : null}
           <div
             className="h-64 overflow-y-auto rounded-xl border border-border"
-            aria-label={`Folders on ${label}`}
+            aria-label={t("settings:hosts_foldersOn", { value0: label })}
             aria-busy={!listing && !error}
           >
             {listing?.entries.map((entry) => (
@@ -149,20 +154,20 @@ export function ExecutionFolderPicker({
             ))}
             {listing?.entries.length === 0 ? (
               <p className="px-3 py-4 text-ui text-muted-foreground">
-                No subfolders. You can select this folder.
+                {t("settings:hosts_noSubfolders")}
               </p>
             ) : null}
           </div>
         </DialogPanel>
         <DialogFooter>
           <Button variant="outline" onClick={() => onClose(null)}>
-            Cancel
+            {t("common:form_cancel")}
           </Button>
           <Button
             disabled={!listing || path.trim() !== listing.parentPath}
             onClick={() => listing && onClose(listing.parentPath)}
           >
-            Use folder
+            {t("settings:hosts_useFolder")}
           </Button>
         </DialogFooter>
       </DialogPopup>

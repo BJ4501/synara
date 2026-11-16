@@ -12,16 +12,18 @@ import { Button } from "../ui/button";
 import { Menu, MenuTrigger, MenuItem, MenuSeparator } from "../ui/menu";
 import { ComposerPickerMenuPopup } from "../chat/ComposerPickerMenuPopup";
 import { toastManager } from "../ui/toast";
+import { useTranslation } from "~/i18n";
 
 /** Execution destination is visible independently of account and cloud state. */
 export function HostConnectionControl({ compact = false }: { compact?: boolean }) {
+  const { t } = useTranslation();
   const [catalogOpen, setCatalogOpen] = useState(false);
   const context = readExecutionContext();
   const navigate = useNavigate();
   const [state, setState] = useState<WsTransportState>("connecting");
   useEffect(() => addWsTransportStateListener(setState, { replayCurrent: true }), []);
   if (!context) return null;
-  const label = context.remote ? context.execution.label : "This computer";
+  const label = context.remote ? context.execution.label : t("common:thisComputer");
   const channel = context.remote?.channel ?? context.controller.channel;
   const destination = channel
     ? `${label} · ${channel === "dev" ? "Development" : `Synara ${channel[0]!.toUpperCase()}${channel.slice(1)}`}`
@@ -107,16 +109,20 @@ export function HostConnectionControl({ compact = false }: { compact?: boolean }
           </div>
           {context.remote ? (
             <>
-              <MenuItem onClick={back}>Back to this computer</MenuItem>
+              <MenuItem onClick={back}>{t("settings:conn_backToThisComputer")}</MenuItem>
               <MenuSeparator />
             </>
           ) : null}
-          <MenuItem onClick={() => setCatalogOpen(true)}>Linked projects</MenuItem>
-          <MenuItem onClick={() => void exportDrafts()}>Export editor drafts</MenuItem>
+          <MenuItem onClick={() => setCatalogOpen(true)}>
+            {t("settings:conn_linkedProjects")}
+          </MenuItem>
+          <MenuItem onClick={() => void exportDrafts()}>
+            {t("settings:conn_exportEditorDrafts")}
+          </MenuItem>
           <MenuItem
             onClick={() => void navigate({ to: "/settings", search: { section: "connections" } })}
           >
-            Manage connections
+            {t("settings:conn_manageConnections")}
           </MenuItem>
         </ComposerPickerMenuPopup>
       </Menu>

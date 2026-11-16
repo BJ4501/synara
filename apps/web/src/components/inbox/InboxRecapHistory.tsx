@@ -8,6 +8,7 @@ import { readHostsApi } from "~/lib/hosts/api";
 import { useAccountDialogStore } from "~/components/account/accountDialogStore";
 import { Button } from "~/components/ui/button";
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "~/components/ui/collapsible";
+import { useTranslation } from "~/i18n";
 
 type HistoryProps = {
   recap: StatsGetRecapResult | undefined;
@@ -15,14 +16,15 @@ type HistoryProps = {
 };
 
 export function InboxRecapHistory(props: HistoryProps) {
+  const { t } = useTranslation();
   const { status } = useAccount();
   const openSignIn = useAccountDialogStore((store) => store.openSignIn);
   if (status?.state !== "signed-in") {
     return (
       <div className="flex items-center justify-between gap-3 text-ui-sm text-muted-foreground">
-        <span>Sign in to automatically save private recaps across your devices.</span>
+        <span>{t("settings:inbox_signInToSaveRecaps")}</span>
         <Button variant="outline" size="sm" onClick={openSignIn}>
-          Sign in
+          {t("common:actionSignIn")}
         </Button>
       </div>
     );
@@ -47,6 +49,7 @@ function PrivateRecapHistory({
   expectedUserId,
   expectedOrganizationId,
 }: HistoryProps & { scope: string; expectedUserId: string; expectedOrganizationId: string }) {
+  const { t, formatLocale } = useTranslation();
   const queryClient = useQueryClient();
   // Remote frames run in the controller's timezone, not on the source host.
   // Their recap window cannot be saved under the source host's identity.
@@ -113,7 +116,7 @@ function PrivateRecapHistory({
     <Collapsible open={open} onOpenChange={setOpen} className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <CollapsibleTrigger className="text-ui font-medium">
-          Saved recaps {open ? "−" : "+"}
+          {t("settings:inbox_savedRecaps")} {open ? "−" : "+"}
         </CollapsibleTrigger>
         <Button
           variant="outline"
@@ -121,34 +124,36 @@ function PrivateRecapHistory({
           disabled={!recap || save.isPending || isRemoteExecution}
           onClick={() => save.mutate()}
         >
-          {save.isPending ? "Saving…" : "Save privately"}
+          {save.isPending ? t("common:saving") : t("settings:inbox_savePrivately")}
         </Button>
       </div>
       <p className="text-ui-sm text-muted-foreground">{recapSaveDescription}</p>
       {save.isSuccess ? (
         <p role="status" className="text-ui-sm text-status-success">
-          Recap saved to your account.
+          {t("settings:inbox_recapSaved")}
         </p>
       ) : null}
       {save.isError || remove.isError ? (
         <p role="alert" className="text-ui-sm text-destructive">
-          {save.error?.message ?? remove.error?.message ?? "The saved recap could not be updated."}
+          {save.error?.message ?? remove.error?.message ?? t("settings:inbox_recapUpdateFailed")}
         </p>
       ) : null}
       <CollapsiblePanel className="flex flex-col gap-3">
         {history.isPending ? (
-          <p className="text-ui-sm text-muted-foreground">Loading saved recaps…</p>
+          <p className="text-ui-sm text-muted-foreground">
+            {t("settings:inbox_loadingSavedRecaps")}
+          </p>
         ) : null}
         {history.isError ? (
           <div className="flex items-center justify-between gap-3 text-ui-sm">
-            <span>Saved recaps could not be loaded.</span>
+            <span>{t("settings:inbox_savedRecapsLoadFailed")}</span>
             <Button variant="outline" size="xs" onClick={() => void history.refetch()}>
-              Try again
+              {t("common:actionTryAgain")}
             </Button>
           </div>
         ) : null}
         {history.isSuccess && uniqueRecaps.length === 0 ? (
-          <p className="text-ui-sm text-muted-foreground">No saved recaps yet.</p>
+          <p className="text-ui-sm text-muted-foreground">{t("settings:inbox_noSavedRecaps")}</p>
         ) : null}
         {uniqueRecaps.map((saved) => (
           <Collapsible key={saved.id} className="rounded-2xl border border-border p-4">
@@ -156,7 +161,8 @@ function PrivateRecapHistory({
               <CollapsibleTrigger className="min-w-0 text-left text-ui">
                 {saved.day} · {saved.sourceHostName}
                 <span className="block text-ui-xs text-muted-foreground">
-                  {saved.timezone} · saved {new Date(saved.savedAt).toLocaleString()}
+                  {saved.timezone} ·{" "}
+                  {`${new Date(saved.savedAt).toLocaleString(formatLocale)}${t("common:dotSaved")}`}
                 </span>
               </CollapsibleTrigger>
               <Button
@@ -165,7 +171,7 @@ function PrivateRecapHistory({
                 disabled={remove.isPending}
                 onClick={() => remove.mutate(saved.id)}
               >
-                Delete
+                {t("common:actionDelete")}
               </Button>
             </div>
             <CollapsiblePanel className="pt-4">{renderRecap(saved)}</CollapsiblePanel>
@@ -178,7 +184,9 @@ function PrivateRecapHistory({
             disabled={history.isFetchingNextPage}
             onClick={() => void history.fetchNextPage()}
           >
-            {history.isFetchingNextPage ? "Loading…" : "Load older recaps"}
+            {history.isFetchingNextPage
+              ? t("common:loadingEllipsis")
+              : t("settings:inbox_loadOlderRecaps")}
           </Button>
         ) : null}
       </CollapsiblePanel>

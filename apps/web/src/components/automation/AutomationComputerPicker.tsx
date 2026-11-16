@@ -8,6 +8,7 @@ import { readWorkspaceFrame, workspaceRoute } from "~/lib/hosts/workspaceFrame";
 import { readWorkspaceSessions } from "~/lib/hosts/workspaceSessions";
 import { ComputerPicker, useWorkspaceComputers } from "../hosts/ComputerPicker";
 import { toastManager } from "../ui/toast";
+import { useTranslation } from "~/i18n";
 
 export function AutomationComputerPicker({
   form,
@@ -18,10 +19,11 @@ export function AutomationComputerPicker({
   readonly disabled: boolean;
   readonly onMoved: () => void;
 }) {
+  const { t } = useTranslation();
   const { computers, currentId, localId, navigate } = useWorkspaceComputers();
   const context = readExecutionContext();
   if (context?.controller.capabilities.remoteConnections !== true)
-    return <span>{context?.execution.label ?? "This computer"}</span>;
+    return <span>{context?.execution.label ?? t("common:thisComputer")}</span>;
   const select = (id: string) => {
     if (disabled || id === currentId) return;
     const frame = readWorkspaceFrame();

@@ -469,8 +469,9 @@ function AutomationDetailView() {
                 title={editDisabledTitle}
               />
               <p className="text-ui-sm text-muted-foreground">
-                Run on {readExecutionContext()?.execution.label ?? "this computer"}. Keep Synara
-                running on that computer.
+                {t("automation:runOnComputer", {
+                  value0: readExecutionContext()?.execution.label ?? t("common:thisComputerLower"),
+                })}
               </p>
               <AutomationSaveStatus
                 saving={updateMutation.isPending}

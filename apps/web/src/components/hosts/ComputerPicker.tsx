@@ -21,6 +21,7 @@ import { ComposerPickerMenuPopup } from "../chat/ComposerPickerMenuPopup";
 import { COMPOSER_TOOLBAR_CHIP_TRIGGER_CLASS_NAME } from "../chat/composerPickerStyles";
 import { Menu, MenuItem, MenuSeparator, MenuTrigger } from "../ui/menu";
 import { toastManager } from "../ui/toast";
+import { useTranslation } from "~/i18n";
 
 export interface ComputerChoice {
   readonly id: string;
@@ -33,6 +34,7 @@ export interface ComputerChoice {
 
 /** Frames read the controller's directory, while commands retain their owning runtime. */
 export function useWorkspaceComputers() {
+  const { t } = useTranslation();
   const frame = readWorkspaceFrame();
   const context = readExecutionContext();
   const sessions = useSyncExternalStore(
@@ -43,7 +45,12 @@ export function useWorkspaceComputers() {
   const local = frame?.controller.environment ?? context?.controller;
   const localId = local?.environmentId ?? "local";
   const computers: ComputerChoice[] = [
-    { id: localId, label: "This computer", detail: local?.label ?? "Local", available: true },
+    {
+      id: localId,
+      label: t("common:thisComputer"),
+      detail: local?.label ?? "Local",
+      available: true,
+    },
     ...sessions.map((session) => {
       const available =
         !session.error && Boolean(session.navigation) && session.summary?.state === "open";
@@ -111,6 +118,7 @@ function ReconnectComputerMenuItem({
   selected: boolean;
   onReconnect: (environmentId: string) => Promise<void>;
 }) {
+  const { t } = useTranslation();
   const [reconnecting, setReconnecting] = useState(false);
   const reconnect = async () => {
     if (reconnecting) return;
@@ -150,7 +158,7 @@ function ReconnectComputerMenuItem({
         <span
           className={buttonVariants({ size: "xs", shape: "capsule", variant: "secondary-outline" })}
         >
-          Reconnect
+          {t("common:actionReconnect")}
         </span>
       </RowHoverActions>
     </MenuItem>
@@ -176,6 +184,7 @@ export function ComputerPicker({
   purpose?: string;
   triggerClassName?: string;
 }) {
+  const { t } = useTranslation();
   const selected = computers.find((computer) => computer.id === value);
   if (!onManage && computers.length === 1)
     return <span className="text-ui text-foreground">{selected?.label}</span>;
@@ -185,8 +194,8 @@ export function ComputerPicker({
         render={
           <PickerTriggerButton
             icon={null}
-            label={selected?.label ?? "Computer unavailable"}
-            aria-label={`${purpose}: ${selected?.label ?? "unavailable"}`}
+            label={selected?.label ?? t("settings:conn_computerUnavailable")}
+            aria-label={`${purpose}: ${selected?.label ?? t("common:unavailable")}`}
             title={selected?.detail}
             variant="ghost"
             disabled={disabled}
@@ -218,7 +227,7 @@ export function ComputerPicker({
         {onManage ? (
           <>
             <MenuSeparator />
-            <MenuItem onClick={onManage}>Connect a computer…</MenuItem>
+            <MenuItem onClick={onManage}>{t("settings:conn_connectAComputer")}</MenuItem>
           </>
         ) : null}
       </ComposerPickerMenuPopup>
@@ -269,19 +278,21 @@ export function WorkspaceSurfaceComputerPicker({
 
 /** The main window's Settings route resolves `computer` and opens host-owned sections on it. */
 export function SettingsComputerPicker({ section }: { section: SettingsSectionId }) {
+  const { t } = useTranslation();
   const { computers, sessions, localId, currentId, navigate, reconnect } = useWorkspaceComputers();
   const frame = readWorkspaceFrame();
   if (readExecutionContext()?.controller.capabilities.remoteConnections !== true) return null;
   if (!isHostSettingsSection(section)) {
+    const [settingsForBefore, settingsForAfter] = t("settings:conn_settingsFor", {
+      value0: "\u0001",
+    }).split("\u0001");
     return (
       <div className="mb-4 flex min-w-0 items-center gap-2 text-ui-sm text-muted-foreground">
-        <span>Settings for</span>
-        <span
-          className="truncate text-foreground"
-          title="These settings always apply to this computer."
-        >
-          This computer
+        {settingsForBefore ? <span>{settingsForBefore}</span> : null}
+        <span className="truncate text-foreground" title={t("settings:conn_settingsAlwaysApply")}>
+          {t("common:thisComputer")}
         </span>
+        {settingsForAfter ? <span>{settingsForAfter}</span> : null}
       </div>
     );
   }
@@ -309,17 +320,23 @@ export function SettingsComputerPicker({ section }: { section: SettingsSectionId
     });
     navigate(`/settings?${search}`);
   };
+  const selectedLabel =
+    computers.find((computer) => computer.id === currentId)?.label ?? t("common:thisComputer");
+  const [settingsForBefore, settingsForAfter] = t("settings:conn_settingsFor", {
+    value0: "\u0001",
+  }).split("\u0001");
   return (
     <div className="mb-4 flex min-w-0 items-center gap-1 text-ui-sm text-muted-foreground">
-      <span>Settings for</span>
+      {settingsForBefore ? <span>{settingsForBefore}</span> : null}
       <ComputerPicker
         computers={computers}
         value={currentId}
-        purpose="Settings for"
+        purpose={t("settings:conn_settingsFor", { value0: selectedLabel })}
         onChange={select}
         onManage={() => navigate("/settings?section=connections")}
         onReconnect={reconnect}
       />
+      {settingsForAfter ? <span>{settingsForAfter}</span> : null}
     </div>
   );
 }
@@ -381,6 +398,7 @@ export function NewChatComputerPicker() {
 
 /** Task ownership belongs beside its title, independently of the selected sidebar section. */
 export function ChatComputerLabel() {
+  const { t } = useTranslation();
   const context = readExecutionContext();
   const [state, setState] = useState<WsTransportState>("connecting");
   useEffect(
@@ -395,7 +413,7 @@ export function ChatComputerLabel() {
     <span
       className="min-w-0 max-w-40 truncate text-ui-xs text-muted-foreground"
       title={`${context.execution.label} · ${status}`}
-      aria-label={`Computer: ${context.execution.label}. ${status}`}
+      aria-label={`${t("common:computerColonName", { value0: context.execution.label })} ${status}`}
     >
       {context.execution.label}
       {state === "open" ? null : ` · ${status}`}

@@ -11,7 +11,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useAccount } from "~/hooks/useAccount";
-import { getFormatLocale, t } from "~/i18n";
+import { getFormatLocale, useTranslation } from "~/i18n";
 import { ACCOUNT_BILLING_ENABLED } from "~/lib/accountBillingFlag";
 import { accountBillingQueryOptions } from "~/lib/accountReactQuery";
 import {
@@ -104,6 +104,7 @@ export function BillingSettingsPanel() {
 }
 
 function BillingAccountPanel({ status, scope }: { status: AccountStatus | null; scope: string }) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const query = useQuery(accountBillingQueryOptions(status));
@@ -172,16 +173,18 @@ function BillingAccountPanel({ status, scope }: { status: AccountStatus | null; 
       title="settings:synaraAltoPro"
       action={
         sandbox ? (
-          <Badge variant="outline">Sandbox</Badge>
+          <Badge variant="outline">{t("settings:billing_sandbox")}</Badge>
         ) : billing?.available ? (
-          <span className="px-2 text-ui text-muted-foreground">Billed by Polar</span>
+          <span className="px-2 text-ui text-muted-foreground">
+            {t("settings:billing_billedByPolar")}
+          </span>
         ) : undefined
       }
     >
       {!signedIn ? (
         <SettingsCard>
           <SettingsListRow
-            title="Sign in to subscribe"
+            title={t("settings:billing_signInToSubscribe")}
             actions={
               <Button
                 variant="outline"
@@ -189,22 +192,22 @@ function BillingAccountPanel({ status, scope }: { status: AccountStatus | null; 
                 disabled={!status}
                 onClick={() => useAccountDialogStore.getState().openSignIn()}
               >
-                Sign in
+                {t("common:actionSignIn")}
               </Button>
             }
           />
         </SettingsCard>
       ) : query.isPending ? (
         <SettingsCard>
-          <SettingsListRow title="Loading plans…" />
+          <SettingsListRow title={t("settings:billing_loadingPlans")} />
         </SettingsCard>
       ) : query.isError ? (
         <SettingsCard>
           <SettingsListRow
-            title="Couldn’t load plans"
+            title={t("settings:billing_couldntLoadPlans")}
             actions={
               <Button variant="outline" size="sm" onClick={() => void query.refetch()}>
-                Try again
+                {t("common:actionTryAgain")}
               </Button>
             }
           />
@@ -212,7 +215,11 @@ function BillingAccountPanel({ status, scope }: { status: AccountStatus | null; 
       ) : !billing?.available ? (
         <SettingsCard>
           <SettingsListRow
-            title={sandbox ? "Test billing is not configured" : "Billing is not configured"}
+            title={
+              sandbox
+                ? t("settings:billing_testNotConfigured")
+                : t("settings:billing_notConfigured")
+            }
           />
         </SettingsCard>
       ) : (
@@ -220,8 +227,7 @@ function BillingAccountPanel({ status, scope }: { status: AccountStatus | null; 
           {billing.canCheckout ? (
             <>
               <p className="px-2 text-ui text-muted-foreground">
-                Everything on this computer stays free. Alto adds Remote, so your agents can reach
-                you when you’re away from it.
+                {t("settings:billing_freeLocalAltoRemote")}
               </p>
               {/* Each card opens its own checkout. */}
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -237,7 +243,7 @@ function BillingAccountPanel({ status, scope }: { status: AccountStatus | null; 
               </div>
               <AltoFeatureList />
               <p className="px-2 text-ui-sm text-muted-foreground">
-                Checkout opens in your browser.
+                {t("settings:billing_checkoutOpensInBrowser")}
               </p>
             </>
           ) : billing.access === "granted" ? (
@@ -251,7 +257,7 @@ function BillingAccountPanel({ status, scope }: { status: AccountStatus | null; 
             // Anyone with no plan on offer right now: never an empty section.
             <SettingsCard>
               <SettingsListRow
-                title="Free"
+                title={t("common:actionFree")}
                 actions={
                   billing.canManage ? (
                     <Button
@@ -260,7 +266,7 @@ function BillingAccountPanel({ status, scope }: { status: AccountStatus | null; 
                       disabled={pending}
                       onClick={() => void openBilling()}
                     >
-                      Manage
+                      {t("common:actionManage")}
                     </Button>
                   ) : null
                 }
@@ -275,7 +281,7 @@ function BillingAccountPanel({ status, scope }: { status: AccountStatus | null; 
               disabled={pending}
               onClick={() => void openBilling()}
             >
-              Manage billing
+              {t("settings:billing_manageBilling")}
             </button>
           ) : null}
         </>
@@ -292,7 +298,7 @@ function BillingAccountPanel({ status, scope }: { status: AccountStatus | null; 
                 disabled={query.isFetching}
                 onClick={() => void query.refetch()}
               >
-                Refresh
+                {t("common:actionRefresh")}
               </button>
             </>
           ) : null}
@@ -327,6 +333,7 @@ function PlanCard(props: {
   disabled: boolean;
   onChoose: () => void;
 }) {
+  const { t } = useTranslation();
   const monthly = props.plan.interval === "month";
   const label = monthly ? "Monthly" : "Yearly";
   const recommended = !monthly || props.plans.length === 1;
@@ -345,14 +352,20 @@ function PlanCard(props: {
     >
       <div className="flex h-5.5 items-center justify-between gap-2">
         <span className="text-ui font-medium text-foreground">{label}</span>
-        {savings ? <Badge variant="info">Save {savings}%</Badge> : null}
+        {savings ? (
+          <Badge variant="info">
+            {t("common:actionSave")} {savings}%
+          </Badge>
+        ) : null}
       </div>
       <div className="flex items-baseline gap-1.5">
         {/* The card's headline figure: a heading size, like the page title. */}
         <span className="text-2xl font-semibold tracking-tight text-foreground tabular-nums">
           {formatBillingPrice(props.plan)}
         </span>
-        <span className="text-ui text-muted-foreground">/ {monthly ? "month" : "year"}</span>
+        <span className="text-ui text-muted-foreground">
+          / {monthly ? t("common:month") : t("common:year")}
+        </span>
       </div>
       <p className="text-ui text-muted-foreground">{note}</p>
       <Button
@@ -362,7 +375,7 @@ function PlanCard(props: {
         disabled={props.disabled}
         onClick={props.onChoose}
       >
-        Choose {label.toLowerCase()}
+        {t("common:actionChoose")} {label.toLowerCase()}
       </Button>
     </div>
   );
@@ -370,6 +383,7 @@ function PlanCard(props: {
 
 /** What Alto unlocks, with the features that are not out yet marked as such. */
 function AltoFeatureList() {
+  const { t } = useTranslation();
   return (
     <SettingsCard>
       {ALTO_FEATURES.map((feature) => (
@@ -384,7 +398,11 @@ function AltoFeatureList() {
             )
           }
           description={feature.description}
-          actions={feature.soon ? <Badge variant="outline">Coming soon</Badge> : undefined}
+          actions={
+            feature.soon ? (
+              <Badge variant="outline">{t("settings:billing_comingSoon")}</Badge>
+            ) : undefined
+          }
         />
       ))}
     </SettingsCard>
@@ -398,6 +416,7 @@ function ActiveAltoCard(props: {
   onManage: () => void;
   onOpenSection: (section: "connections" | "profile") => void;
 }) {
+  const { t } = useTranslation();
   const { billing } = props;
   const ending = billing.cancelAtPeriodEnd;
   const date = billing.validUntil ? formatPlanDate(billing.validUntil) : null;
@@ -414,35 +433,37 @@ function ActiveAltoCard(props: {
         title={
           <span className="flex items-center gap-2">
             <span>{t("settings:altoProPlan")}</span>
-            <Badge variant={ending ? "warning" : "info"}>{ending ? "Ending" : "Active"}</Badge>
+            <Badge variant={ending ? "warning" : "info"}>
+              {ending ? t("settings:billing_ending") : t("common:actionActive")}
+            </Badge>
           </span>
         }
         description={status}
         actions={
           billing.canManage ? (
             <Button variant="outline" size="sm" disabled={props.disabled} onClick={props.onManage}>
-              Manage
+              {t("common:actionManage")}
               <ExternalLinkIcon />
             </Button>
           ) : null
         }
       />
       <SettingsListRow
-        title="Remote, approvals and alerts"
-        description="Pair your computers to reach your agents from anywhere."
+        title={t("settings:billing_remoteApprovalsAlerts")}
+        description={t("settings:billing_pairComputers")}
         actions={
           <Button variant="ghost" size="sm" onClick={() => props.onOpenSection("connections")}>
-            Connections
+            {t("settings:navGroup_connections")}
             <ChevronRightIcon />
           </Button>
         }
       />
       <SettingsListRow
-        title="Public page"
-        description="Share your usage at trysynara.com/@handle."
+        title={t("settings:billing_publicPage")}
+        description={t("settings:billing_shareUsageAt")}
         actions={
           <Button variant="ghost" size="sm" onClick={() => props.onOpenSection("profile")}>
-            Profile
+            {t("computer:nav_profile")}
             <ChevronRightIcon />
           </Button>
         }

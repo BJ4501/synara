@@ -1210,15 +1210,15 @@ export function AutomationDialog({
 
         <div className="px-5 pb-3 text-ui-sm text-muted-foreground">
           <div className="flex items-center gap-2">
-            <span>Run on</span>
-            {computerPicker ?? (
-              <span>{readExecutionContext()?.execution.label ?? "This computer"}</span>
-            )}
+            <span>
+              {t("automation:runOnComputer", {
+                value0: readExecutionContext()?.execution.label ?? t("common:thisComputerLower"),
+              })}
+            </span>
+            {computerPicker}
           </div>
-          <p>This computer must stay awake with Synara running. Other computers can be closed.</p>
-          {projects.length === 0 ? (
-            <p>Add a project on this computer before creating an automation.</p>
-          ) : null}
+          <p>{t("automation:thisComputerMustStayAwake")}</p>
+          {projects.length === 0 ? <p>{t("automation:addProjectBeforeAutomation")}</p> : null}
         </div>
 
         <div className="flex flex-wrap items-center gap-2 px-4 pb-4 pt-1">

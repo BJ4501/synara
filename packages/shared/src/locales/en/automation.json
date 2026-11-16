@@ -197,5 +197,8 @@
   "intentOnceAt": "Once at {{time}}",
   "intentDailyAt": "Daily at {{time}}",
   "intentWeekdaysAt": "Weekdays at {{time}}",
-  "intentWeeklyAt": "Weekly at {{time}}"
+  "intentWeeklyAt": "Weekly at {{time}}",
+  "runOnComputer": "Run on {{value0}}. Keep Synara running on that computer.",
+  "thisComputerMustStayAwake": "This computer must stay awake with Synara running. Other computers can be closed.",
+  "addProjectBeforeAutomation": "Add a project on this computer before creating an automation."
 }

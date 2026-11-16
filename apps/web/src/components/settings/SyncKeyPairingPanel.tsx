@@ -20,6 +20,7 @@ import {
   encodeSyncKeyPairingRequest,
   syncKeyPairingReducer,
 } from "~/lib/hosts/syncKeyPairing";
+import { useTranslation } from "~/i18n";
 import { SettingsListRow } from "./SettingsPanelPrimitives";
 
 function PairingRequestField({
@@ -37,11 +38,12 @@ function PairingRequestField({
   describedBy?: string;
   onValueChange?: (value: string) => void;
 }) {
+  const { t } = useTranslation();
   const id = useId();
   return (
     <div className="space-y-2">
       <label htmlFor={id} className="block text-ui-sm font-medium text-foreground">
-        Pairing request
+        {t("settings:sync_pairingRequest")}
       </label>
       <Textarea
         id={id}
@@ -73,6 +75,7 @@ function VerificationCode({ children }: { children: string }) {
 }
 
 export function SyncKeyPairingPanel() {
+  const { t } = useTranslation();
   const [state, dispatch] = useReducer(syncKeyPairingReducer, SYNC_KEY_PAIRING_INITIAL_STATE);
   // Cancelling/restarting invalidates any in-flight RPC so a late response
   // cannot reopen a flow the user already left.
@@ -194,12 +197,10 @@ export function SyncKeyPairingPanel() {
     <>
       <SettingsListRow
         align="start"
-        title="Pair two devices"
+        title={t("settings:sync_pairTwoDevices")}
         description={
           <span className="flex flex-col gap-1 text-muted-foreground">
-            <span>
-              The new device creates a request. A device that already has the Sync Key approves it.
-            </span>
+            <span>{t("settings:sync_newDeviceCreatesRequest")}</span>
             {state.phase === "start" && state.warning ? (
               <span role="alert" className="text-foreground">
                 {state.warning}
@@ -216,7 +217,7 @@ export function SyncKeyPairingPanel() {
           state.phase === "start" ? (
             <>
               <Button size="xs" variant="outline" onClick={() => void beginNewDevice()}>
-                Set up on this device
+                {t("settings:sync_setUpOnThisDevice")}
               </Button>
               <Button
                 size="xs"
@@ -226,12 +227,12 @@ export function SyncKeyPairingPanel() {
                   dispatch({ type: "existing-started" });
                 }}
               >
-                Approve a device
+                {t("settings:sync_approveADevice")}
               </Button>
             </>
           ) : (
             <Button size="xs" variant="ghost" onClick={reset}>
-              Cancel
+              {t("common:form_cancel")}
             </Button>
           )
         }
@@ -243,7 +244,7 @@ export function SyncKeyPairingPanel() {
       >
         {startBusy ? (
           <p role="status" className="text-ui text-muted-foreground">
-            Creating a pairing request...
+            {t("settings:sync_creatingPairingRequest")}
           </p>
         ) : null}
 
@@ -251,12 +252,9 @@ export function SyncKeyPairingPanel() {
           <div className="space-y-4">
             <div className="space-y-1">
               <h3 className="text-ui font-medium text-foreground">
-                Send this request to your other device
+                {t("settings:sync_sendRequestToOther")}
               </h3>
-              <p className="text-ui-sm text-muted-foreground">
-                Copy and send the whole blob. It contains this device&apos;s ID and public key, not
-                your Sync Key. On the other device, choose Approve a device and paste it there.
-              </p>
+              <p className="text-ui-sm text-muted-foreground">{t("settings:sync_copyBlobHelp")}</p>
             </div>
             <PairingRequestField
               value={state.transferableRequest}
@@ -275,10 +273,10 @@ export function SyncKeyPairingPanel() {
                 disabled={state.pending}
                 onClick={() => copyToClipboard(state.transferableRequest, undefined)}
               >
-                {isCopied ? "Copied" : "Copy request"}
+                {isCopied ? t("common:actionCopied") : t("settings:sync_copyRequest")}
               </Button>
               <Button size="xs" disabled={state.pending} onClick={() => void receiveSyncKey()}>
-                {state.pending ? "Checking..." : "I've approved it"}
+                {state.pending ? t("common:checkingDots") : t("settings:sync_iveApprovedIt")}
               </Button>
             </div>
           </div>
@@ -288,10 +286,10 @@ export function SyncKeyPairingPanel() {
           <div className="space-y-4">
             <div className="space-y-1">
               <h3 className="text-ui font-medium text-foreground">
-                Paste the request from the new device
+                {t("settings:sync_pasteRequest")}
               </h3>
               <p className="text-ui-sm text-muted-foreground">
-                Only approve a request you just created on the device you expect.
+                {t("settings:sync_onlyApproveExpected")}
               </p>
             </div>
             <PairingRequestField
@@ -312,7 +310,7 @@ export function SyncKeyPairingPanel() {
               disabled={state.pending || state.transferableRequest.trim().length === 0}
               onClick={() => void offerSyncKey()}
             >
-              {state.pending ? "Approving..." : "Approve device"}
+              {state.pending ? t("common:approvingDots") : t("settings:sync_approveDevice")}
             </Button>
           </div>
         ) : null}
@@ -321,15 +319,15 @@ export function SyncKeyPairingPanel() {
           <div className="space-y-3">
             <div className="space-y-1">
               <h3 className="text-ui font-medium text-foreground">
-                Type this code on the new device
+                {t("settings:sync_typeCodeOnNew")}
               </h3>
               <p className="text-ui-sm text-muted-foreground">
-                The new device must show the same code before it adopts the Sync Key.
+                {t("settings:sync_newDeviceMustShowSame")}
               </p>
             </div>
             <VerificationCode>{state.ownVerificationCode}</VerificationCode>
             <Button size="xs" variant="outline" onClick={reset}>
-              Done
+              {t("common:actionDone")}
             </Button>
           </div>
         ) : null}
@@ -337,12 +335,16 @@ export function SyncKeyPairingPanel() {
         {state.phase === "new-confirm" ? (
           <div className="space-y-4">
             <div className="space-y-1">
-              <h3 className="text-ui font-medium text-foreground">Compare the two devices</h3>
-              <p className="text-ui-sm text-muted-foreground">This device shows:</p>
+              <h3 className="text-ui font-medium text-foreground">
+                {t("settings:sync_compareTwoDevices")}
+              </h3>
+              <p className="text-ui-sm text-muted-foreground">
+                {t("settings:sync_thisDeviceShows")}
+              </p>
               <VerificationCode>{state.ownVerificationCode}</VerificationCode>
             </div>
             <ShortCodeField
-              label="Code shown on your other device"
+              label={t("settings:sync_codeOnOtherDevice")}
               value={state.enteredVerificationCode}
               codeLength={SYNC_KEY_PAIRING_CODE_LENGTH}
               groupSize={SYNC_KEY_PAIRING_CODE_GROUP_SIZE}
@@ -365,7 +367,7 @@ export function SyncKeyPairingPanel() {
               }
               onClick={() => void confirmSyncKey()}
             >
-              {state.pending ? "Confirming..." : "Confirm codes"}
+              {state.pending ? t("settings:sync_confirming") : t("settings:sync_confirmCodes")}
             </Button>
           </div>
         ) : null}
@@ -373,10 +375,10 @@ export function SyncKeyPairingPanel() {
         {state.phase === "new-success" ? (
           <div className="space-y-3">
             <p role="status" className="text-ui-xs text-foreground">
-              Host secrets are now synced.
+              {t("settings:sync_hostSecretsSynced")}
             </p>
             <Button size="xs" variant="outline" onClick={reset}>
-              Done
+              {t("common:actionDone")}
             </Button>
           </div>
         ) : null}

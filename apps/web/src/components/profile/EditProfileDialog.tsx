@@ -389,7 +389,7 @@ function EditProfileDialogContent({
                       openPlan();
                     }}
                   >
-                    See plans
+                    {t("settings:profile_seePlans")}
                   </button>
                 </>
               ) : null}
@@ -434,19 +434,19 @@ function EditProfileDialogContent({
           {accountProfile && (
             <>
               <Field
-                label="Use theme color"
+                label={t("settings:profile_useThemeColor")}
                 hint="Turn off to choose a color just for your profile."
               >
                 <div className="flex justify-end">
                   <Switch
                     checked={!customAccent}
                     onCheckedChange={(follow) => setCustomAccent(!follow)}
-                    aria-label="Use theme color"
+                    aria-label={t("settings:profile_useThemeColor")}
                   />
                 </div>
               </Field>
               {customAccent && (
-                <Field label="Profile color">
+                <Field label={t("settings:profile_profileColor")}>
                   <ColorPill
                     color={draftAccent}
                     onChange={setDraftAccent}
@@ -459,7 +459,7 @@ function EditProfileDialogContent({
           )}
           {accountProfile && (
             <Field
-              label="Public profile"
+              label={t("settings:profile_publicProfile")}
               hint={
                 draftPublic
                   ? `Anyone can see your profile at ${publicProfileDisplayUrl(draftHandle)}.`
@@ -470,7 +470,7 @@ function EditProfileDialogContent({
                 <Switch
                   checked={draftPublic}
                   onCheckedChange={setDraftPublic}
-                  aria-label="Public profile"
+                  aria-label={t("settings:profile_publicProfile")}
                 />
               </div>
             </Field>
@@ -480,9 +480,11 @@ function EditProfileDialogContent({
         {accountProfile && (
           <div className="flex flex-col gap-1.5">
             <div className="flex items-baseline justify-between gap-3 px-1">
-              <span className="text-ui-sm text-muted-foreground">Links</span>
+              <span className="text-ui-sm text-muted-foreground">
+                {t("settings:profile_links")}
+              </span>
               <span className="text-ui-xs text-muted-foreground/80">
-                Optional · shown on your public profile
+                {t("settings:profile_optionalShownPublic")}
               </span>
             </div>
             <div className="divide-y divide-border/60 overflow-hidden rounded-xl border border-border/60">
@@ -516,7 +518,7 @@ function EditProfileDialogContent({
           onClick={() => void handleSave()}
           disabled={processing || saving}
         >
-          {saving ? "Saving…" : t("computer:form_save")}
+          {saving ? t("common:saving") : t("computer:form_save")}
         </Button>
       </div>
     </>
@@ -561,7 +563,7 @@ function AccountAvatarEditor({
         {hasSsoImage && (
           <AvatarChoiceButton selected={draftSource === "sso"} onClick={onSelectSso}>
             <CentralIcon name="circle-person" className="size-3.5" />
-            Provider picture
+            {t("settings:profile_providerPicture")}
           </AvatarChoiceButton>
         )}
         <AvatarChoiceButton
@@ -571,14 +573,14 @@ function AccountAvatarEditor({
         >
           <CentralIcon name="add-image" className="size-3.5" />
           {processing
-            ? "Uploading…"
+            ? t("common:uploadingEllipsis")
             : hasUpload
               ? t("common:edit_replacePhoto")
               : t("common:edit_uploadPhoto")}
         </AvatarChoiceButton>
         <AvatarChoiceButton selected={draftSource === "placeholder"} onClick={onSelectPlaceholder}>
           <CentralIcon name="letter-a-circle" className="size-3.5" />
-          Initials
+          {t("settings:profile_initials")}
         </AvatarChoiceButton>
         {hasUpload && (
           <Button
@@ -603,7 +605,7 @@ function AccountAvatarEditor({
 
       {draftSource !== "placeholder" && (
         <p className="text-center text-ui-xs text-muted-foreground">
-          Colors apply to the initials avatar.
+          {t("settings:profile_colorsApplyInitials")}
         </p>
       )}
     </div>
@@ -764,6 +766,7 @@ function SocialLinkField({
   invalid: boolean;
   onChange: (value: string) => void;
 }) {
+  const { t } = useTranslation();
   const Glyph = SOCIAL_GLYPHS[platform];
   const label = socialLinkLabel(platform);
   return (
@@ -776,11 +779,13 @@ function SocialLinkField({
         <InputGroup className={fieldControlClassName}>
           <InputGroupInput
             value={value}
-            aria-label={`${label} username`}
+            aria-label={`${label} ${t("settings:profile_usernamePlaceholder")}`}
             aria-invalid={invalid || undefined}
             onChange={(event) => onChange(event.target.value)}
             placeholder={
-              platform === "linkedin" || platform === "github" ? "username" : "@username"
+              platform === "linkedin" || platform === "github"
+                ? t("settings:profile_usernamePlaceholder")
+                : t("settings:profile_atUsername")
             }
             autoCapitalize="none"
             autoCorrect="off"

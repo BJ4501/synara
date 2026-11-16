@@ -1115,7 +1115,7 @@ export function SidebarSearchPalette(props: SidebarSearchPaletteProps) {
                                 {thread.host ? (
                                   <span className="min-w-0 truncate" title={thread.host.name}>
                                     <HighlightedText text={thread.host.name} query={query} />
-                                    {thread.host.unavailable ? " · Unavailable" : null}
+                                    {thread.host.unavailable ? t("common:dotUnavailable") : null}
                                   </span>
                                 ) : null}
                               </span>
@@ -1216,7 +1216,7 @@ export function SidebarSearchPalette(props: SidebarSearchPaletteProps) {
                           {project.host ? (
                             <span className="min-w-0 truncate" title={project.host.name}>
                               <HighlightedText text={project.host.name} query={query} />
-                              {project.host.unavailable ? " · Unavailable" : null}
+                              {project.host.unavailable ? t("common:dotUnavailable") : null}
                             </span>
                           ) : null}
                           <span className="min-w-0 truncate">

@@ -20,6 +20,7 @@ import { useAccount } from "~/hooks/useAccount";
 import { useHosts } from "~/hooks/useHosts";
 import { accountErrorMessage } from "~/lib/accountLogic";
 import { shouldPromptForDiscoverability } from "~/lib/hosts/enrollment";
+import { useTranslation } from "~/i18n";
 
 /**
  * Asks once, on first sign-in into a shared workspace, whether this machine
@@ -36,6 +37,7 @@ import { shouldPromptForDiscoverability } from "~/lib/hosts/enrollment";
  * a modal that returns every launch is one people learn to click through.
  */
 export function HostDiscoverabilityPrompt() {
+  const { t } = useTranslation();
   const account = useAccount();
   const remote = useHosts({ enabled: account.me !== null });
   const [dismissed, setDismissed] = useState(false);
@@ -80,18 +82,22 @@ export function HostDiscoverabilityPrompt() {
     <Dialog open={open}>
       <DialogPopup showCloseButton={false} className="sm:max-w-[420px]">
         <DialogHeader>
-          <DialogTitle>Share this machine with {organizationName}?</DialogTitle>
+          <DialogTitle>
+            {t("settings:conn_shareThisMachineWith", { value0: organizationName })}
+          </DialogTitle>
           <DialogDescription>
-            Everyone in {organizationName} would be able to see {host.name} and open sessions on it
-            — which means running agents and code here. You can change this any time in Settings.
+            {t("settings:conn_workspaceWouldSee", {
+              value0: organizationName,
+              value1: host.name,
+            })}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" disabled={pending} onClick={() => void answer(false)}>
-            Keep private
+            {t("settings:conn_keepPrivate")}
           </Button>
           <Button disabled={pending} onClick={() => void answer(true)}>
-            {pending ? "Saving..." : "Share"}
+            {pending ? t("common:savingDots") : t("common:actionShare")}
           </Button>
         </DialogFooter>
       </DialogPopup>

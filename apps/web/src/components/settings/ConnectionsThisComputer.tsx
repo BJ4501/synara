@@ -17,7 +17,7 @@ import { useAccount } from "~/hooks/useAccount";
 import { reportRemoteAccessAllowed } from "~/hooks/useDesktopKeepAwake";
 import { useDevices, useHosts, useHostSessions } from "~/hooks/useHosts";
 import { useRemoteHostState } from "~/hooks/useRemoteHostState";
-import { t } from "~/i18n";
+import { useTranslation } from "~/i18n";
 import { accountErrorMessage } from "~/lib/accountLogic";
 import { readHostsApi } from "~/lib/hosts/api";
 import { readExecutionContext } from "~/lib/hosts/executionContext";
@@ -59,6 +59,7 @@ export function ConnectionsThisComputer({
   onRefreshBilling?: (() => void) | undefined;
   onViewProPlans?: (() => void) | undefined;
 }) {
+  const { t } = useTranslation();
   const { state, loadError, refresh } = useRemoteHostState();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -130,11 +131,12 @@ export function ConnectionsThisComputer({
   return (
     <>
       <SettingsSectionShell
-        title={`Devices that can control this ${computerNoun}`}
+        title={t("settings:conn_devicesThatCanControlThis", { value0: computerNoun })}
+        translateTitle={false}
         action={
           <div className="flex items-center gap-1.5">
             <IconButton
-              label="Refresh"
+              label={t("common:actionRefresh")}
               variant="ghost"
               onClick={() => {
                 void refresh();
@@ -144,7 +146,7 @@ export function ConnectionsThisComputer({
               <RotateCcwIcon className="size-3.5" />
             </IconButton>
             <Button size="xs" shape="capsule" onClick={() => setDialog("add")}>
-              Connect a device
+              {t("settings:conn_connectADevice")}
             </Button>
           </div>
         }
@@ -153,24 +155,22 @@ export function ConnectionsThisComputer({
           {onViewProPlans ? (
             <SettingsListRow
               title={t("settings:synaraAltoPro")}
-              description={`Alto includes remote access to this ${computerNoun}. Local use stays free.`}
+              description={t("settings:conn_altoIncludesRemote", { value0: computerNoun })}
               actions={
                 <Button size="xs" shape="capsule" variant="subtle" onClick={onViewProPlans}>
-                  View Alto plans
+                  {t("settings:conn_viewAltoPlans")}
                 </Button>
               }
             />
           ) : null}
           <SettingsListRow
-            title="Allow connections"
-            description={
-              allowChecked ? undefined : "Devices below can't connect until you turn this on."
-            }
+            title={t("settings:conn_allowConnections")}
+            description={allowChecked ? undefined : t("settings:conn_devicesCantConnectUntilOn")}
             actions={
               <Switch
                 checked={allowChecked}
                 disabled={busy || state === null}
-                aria-label="Allow connections"
+                aria-label={t("settings:conn_allowConnections")}
                 onCheckedChange={(next) => void setAllow(next)}
               />
             }
@@ -179,8 +179,10 @@ export function ConnectionsThisComputer({
             <SettingsListRow
               title={
                 pending.length === 1
-                  ? `${pending[0]!.pendingDevice.label} is waiting for approval`
-                  : `${pending.length} devices are waiting for approval`
+                  ? t("settings:conn_deviceWaiting", {
+                      value0: pending[0]!.pendingDevice.label,
+                    })
+                  : t("settings:conn_devicesWaiting", { count: pending.length })
               }
               actions={
                 <Button
@@ -189,7 +191,7 @@ export function ConnectionsThisComputer({
                   variant="subtle"
                   onClick={() => setDialog("review")}
                 >
-                  Review
+                  {t("common:actionReview")}
                 </Button>
               }
             />
@@ -204,14 +206,18 @@ export function ConnectionsThisComputer({
           ))}
           {state !== null && devices.length === 0 ? (
             <SettingsListRow
-              title={<span className="font-normal text-muted-foreground">No devices yet</span>}
-              description={`Add your iPhone or iPad to control this ${computerNoun} from anywhere.`}
+              title={
+                <span className="font-normal text-muted-foreground">
+                  {t("settings:conn_noDevicesYet")}
+                </span>
+              }
+              description={t("settings:conn_addIphoneIpad", { value0: computerNoun })}
             />
           ) : null}
           {state?.rootNeedsRepair ? (
             <SettingsListRow
-              title="Remote access needs repair"
-              description="Devices can't verify this computer until it is repaired."
+              title={t("settings:conn_remoteNeedsRepair")}
+              description={t("settings:conn_devicesCantVerify")}
               actions={
                 <Button
                   size="xs"
@@ -220,7 +226,7 @@ export function ConnectionsThisComputer({
                   disabled={busy}
                   onClick={() => void repair()}
                 >
-                  Repair
+                  {t("common:actionRepair")}
                 </Button>
               }
             />
@@ -244,7 +250,7 @@ export function ConnectionsThisComputer({
           }}
         >
           <DisclosureChevron open={advancedOpen} />
-          Advanced
+          {t("common:actionAdvanced")}
         </button>
         <DisclosureRegion open={advancedOpen}>
           {advancedSeen ? <AccountAdvanced /> : null}
@@ -268,6 +274,7 @@ export function ConnectionsThisComputer({
 
 /** The account-level view: this machine's link, signed-in devices, and live sessions. */
 function AccountAdvanced() {
+  const { t } = useTranslation();
   const account = useAccount();
   const remote = useHosts({ enabled: true });
   const devices = useDevices({ enabled: true });
@@ -368,10 +375,10 @@ function AccountAdvanced() {
   return (
     <div className="pt-1">
       {remote.enrollment?.host ? (
-        <SettingsSection title="This machine on your account">
+        <SettingsSection title="settings:conn_thisMachineOnAccount">
           <SettingsListRow
             title={remote.enrollment.host.name}
-            description="Signing out unlinks it automatically. Synara keeps working locally."
+            description={t("settings:conn_signingOutUnlinks")}
             actions={
               <Button
                 size="xs"
@@ -380,19 +387,21 @@ function AccountAdvanced() {
                 disabled={remote.unlinkLocalHost.isPending}
                 onClick={() => void unlink()}
               >
-                {remote.unlinkLocalHost.isPending ? "Unlinking…" : "Unlink"}
+                {remote.unlinkLocalHost.isPending
+                  ? t("common:unlinkingEllipsis")
+                  : t("common:unlink")}
               </Button>
             }
           />
           {localHost && remote.canManageHost(localHost) ? (
             <SettingsListRow
-              title="Share with your workspace"
-              description="Members of your workspace can see and use this machine."
+              title={t("settings:conn_shareWithYourWorkspace")}
+              description={t("settings:conn_membersCanSee")}
               actions={
                 <Switch
                   checked={localHost.discoverable}
                   disabled={remote.setDiscoverable.isPending}
-                  aria-label="Share this machine with your workspace"
+                  aria-label={t("settings:conn_shareMachineWithWorkspace")}
                   onCheckedChange={(discoverable) =>
                     void remote.setDiscoverable
                       .mutateAsync({ hostId: localHost.id, discoverable })
@@ -410,7 +419,7 @@ function AccountAdvanced() {
         </SettingsSection>
       ) : null}
 
-      <SettingsSection title="Account devices">
+      <SettingsSection title="settings:conn_accountDevices">
         <QueryRows
           query={devices.devicesQuery}
           loading="Loading devices…"
@@ -430,7 +439,7 @@ function AccountAdvanced() {
         </QueryRows>
       </SettingsSection>
 
-      <SettingsSection title="Active sessions">
+      <SettingsSection title="settings:conn_activeSessions">
         <QueryRows
           query={sessions.sessionsQuery}
           loading="Loading sessions…"

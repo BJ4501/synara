@@ -32,6 +32,7 @@ import { AnnouncementSheet } from "../AnnouncementSheet";
 import { OneTimeCoachmark } from "../OneTimeCoachmark";
 import { useOpenSynaraPlan } from "../settings/BillingSettingsPanel";
 import { RemoteConnectionsAnnouncementHero } from "./RemoteConnectionsAnnouncementHero";
+import { useTranslation } from "~/i18n";
 
 export const REMOTE_CONNECTIONS_ANNOUNCEMENT_STORAGE_KEY =
   "synara:remote-connections-announcement:v1";
@@ -85,6 +86,7 @@ function useClearOfOutsideDialogs(wanted: boolean): boolean {
 }
 
 export function RemoteConnectionsAnnouncement() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const openPlans = useOpenSynaraPlan();
   const [storage, setStorage] = useAnnouncementStorage();
@@ -116,14 +118,14 @@ export function RemoteConnectionsAnnouncement() {
       order="last"
       presentation="feature"
       hero={<RemoteConnectionsAnnouncementHero />}
-      title="Introducing Remote Connections"
+      title={t("settings:conn_introducingRemote")}
       description={
-        offerPlans
-          ? "Control Synara on one computer from another. Included with Synara Alto; iPhone and iPad are coming soon."
-          : "Control Synara on one computer from another. Pair a device to start; iPhone and iPad are coming soon."
+        offerPlans ? t("settings:conn_remoteAltoBlurb") : t("settings:conn_remotePairBlurb")
       }
-      dismissLabel="Not now"
-      confirmLabel={offerPlans ? "View Alto plans" : "Connect a device"}
+      dismissLabel={t("common:notNow")}
+      confirmLabel={
+        offerPlans ? t("settings:conn_viewAltoPlans") : t("settings:conn_connectADevice")
+      }
       onDismiss={() => setStorage({ acknowledged: true, pointToAccount: true })}
       onConfirm={() => {
         setStorage({ acknowledged: true });
@@ -147,6 +149,7 @@ export function RemoteConnectionsCoachmark({
   tooltip: string;
   children: ReactElement<ButtonHTMLAttributes<HTMLButtonElement>>;
 }) {
+  const { t } = useTranslation();
   const [storage] = useAnnouncementStorage();
   const available = useRemoteConnectionsAvailable();
   const follows = available && storage.pointToAccount === true;
@@ -161,11 +164,13 @@ export function RemoteConnectionsCoachmark({
   return (
     <OneTimeCoachmark
       storageKey={REMOTE_CONNECTIONS_COACHMARK_STORAGE_KEY}
-      title={signedIn ? "Your computers live here" : "Sign in to connect"}
+      title={
+        signedIn ? t("settings:conn_yourComputersLiveHere") : t("settings:conn_signInToConnect")
+      }
       description={
         signedIn
-          ? "Open your account and choose Connections to pair another computer."
-          : "Sign in here, then pair your other computer from Connections."
+          ? t("settings:conn_openAccountChooseConnections")
+          : t("settings:conn_signInThenPair")
       }
       tooltip={tooltip}
       ready={follows && settled && clear}

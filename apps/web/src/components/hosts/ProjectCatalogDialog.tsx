@@ -34,8 +34,10 @@ import {
 } from "../ui/dialog";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
+import { useTranslation } from "~/i18n";
 
 export function ProjectCatalogDialog({ onClose }: { onClose: () => void }) {
+  const { t, formatLocale } = useTranslation();
   useQuery(accountStatusQueryOptions());
   const context = readExecutionContext();
   const projects = useStore((store) => store.projects);
@@ -145,7 +147,9 @@ export function ProjectCatalogDialog({ onClose }: { onClose: () => void }) {
     <div className="flex items-center gap-3 py-2" key={checkoutKey(checkout)}>
       <input
         type="checkbox"
-        aria-label={`Select ${checkout.name} on ${checkout.hostName}`}
+        aria-label={t("settings:conn_selectOn", {
+          value0: `${checkout.name} (${checkout.hostName})`,
+        })}
         checked={selected.includes(checkoutKey(checkout))}
         disabled={!editable}
         onChange={(event) =>
@@ -168,10 +172,10 @@ export function ProjectCatalogDialog({ onClose }: { onClose: () => void }) {
         </p>
         <p className="text-ui-xs text-muted-foreground">
           {checkout.missing
-            ? "No longer in the latest host snapshot"
+            ? t("settings:conn_noLongerInSnapshot")
             : checkout.environmentId === context?.execution.environmentId
-              ? "Selected host"
-              : `Saved ${new Date(checkout.observedAt).toLocaleString()} · availability checked when opening`}
+              ? t("settings:conn_selectedHost")
+              : `${new Date(checkout.observedAt).toLocaleString(formatLocale)} · ${t("settings:conn_savedAvailabilityChecked")}`}
         </p>
       </div>
       <Button
@@ -180,7 +184,9 @@ export function ProjectCatalogDialog({ onClose }: { onClose: () => void }) {
         disabled={!editable || checkout.missing}
         onClick={() => void open(checkout)}
       >
-        {checkout.environmentId === context?.execution.environmentId ? "Open" : "Switch and open"}
+        {checkout.environmentId === context?.execution.environmentId
+          ? t("common:actionOpen")
+          : t("settings:conn_switchAndOpen")}
       </Button>
     </div>
   );
@@ -193,15 +199,13 @@ export function ProjectCatalogDialog({ onClose }: { onClose: () => void }) {
     >
       <DialogPopup className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Linked projects</DialogTitle>
-          <DialogDescription>
-            Choose the checkout to open. Linking keeps files and chats on their original computer.
-          </DialogDescription>
+          <DialogTitle>{t("settings:conn_linkedProjects")}</DialogTitle>
+          <DialogDescription>{t("settings:conn_chooseCheckout")}</DialogDescription>
         </DialogHeader>
         <DialogPanel className="space-y-5">
           {state !== "open" ? (
             <p role="status" className="text-ui text-muted-foreground">
-              Offline catalog · saved metadata only. Reconnect to make changes or open a checkout.
+              {t("settings:conn_offlineCatalog")}
             </p>
           ) : null}
           {error ? (
@@ -213,7 +217,7 @@ export function ProjectCatalogDialog({ onClose }: { onClose: () => void }) {
             <section key={group.id} className="rounded-xl border border-border p-3">
               <div className="flex items-center gap-2">
                 <Input
-                  aria-label="Group name"
+                  aria-label={t("settings:conn_groupName")}
                   value={group.name}
                   disabled={!editable}
                   onChange={(event) =>
@@ -226,7 +230,7 @@ export function ProjectCatalogDialog({ onClose }: { onClose: () => void }) {
                   }
                 />
                 <select
-                  aria-label={`Color for ${group.name}`}
+                  aria-label={t("settings:conn_colorFor", { value0: group.name })}
                   className="rounded-md border border-border bg-background px-2 py-1 text-ui"
                   disabled={!editable}
                   value={group.appearance?.kind === "icon" ? (group.appearance.color ?? "") : ""}
@@ -250,7 +254,7 @@ export function ProjectCatalogDialog({ onClose }: { onClose: () => void }) {
                     })
                   }
                 >
-                  <option value="">Default</option>
+                  <option value="">{t("common:actionDefault")}</option>
                   {PROJECT_COLORS.map((color) => (
                     <option key={color}>{color}</option>
                   ))}
@@ -261,7 +265,7 @@ export function ProjectCatalogDialog({ onClose }: { onClose: () => void }) {
                   disabled={!editable}
                   onClick={() => save(splitGroup(catalog, group.id))}
                 >
-                  Split group
+                  {t("settings:conn_splitGroup")}
                 </Button>
               </div>
               <div
@@ -296,8 +300,8 @@ export function ProjectCatalogDialog({ onClose }: { onClose: () => void }) {
                         >
                           {group.preferredCheckout &&
                           checkoutKey(group.preferredCheckout) === checkoutKey(ref)
-                            ? "Preferred checkout"
-                            : "Set preferred"}
+                            ? t("settings:conn_preferredCheckout")
+                            : t("settings:conn_setPreferred")}
                         </Button>
                         <Button
                           size="sm"
@@ -305,7 +309,7 @@ export function ProjectCatalogDialog({ onClose }: { onClose: () => void }) {
                           disabled={!editable}
                           onClick={() => save(unlinkCheckout(catalog, group.id, ref))}
                         >
-                          Unlink
+                          {t("common:unlink")}
                         </Button>
                       </div>
                     </div>
@@ -315,7 +319,7 @@ export function ProjectCatalogDialog({ onClose }: { onClose: () => void }) {
             </section>
           ))}
           <section>
-            <p className="text-ui font-medium">Checkouts</p>
+            <p className="text-ui font-medium">{t("settings:conn_checkouts")}</p>
             {catalog.checkouts
               .filter(
                 (item) =>
@@ -326,14 +330,14 @@ export function ProjectCatalogDialog({ onClose }: { onClose: () => void }) {
               .map(row)}
             {!catalog.checkouts.length ? (
               <p className="py-3 text-ui text-muted-foreground">
-                Open this catalog on each connected host to save its project list.
+                {t("settings:conn_openCatalogOnEachHost")}
               </p>
             ) : null}
           </section>
           <div className="flex gap-2">
             <Input
-              aria-label="New group name"
-              placeholder="Group name"
+              aria-label={t("settings:conn_newGroupName")}
+              placeholder={t("settings:conn_groupName")}
               value={name}
               onChange={(event) => setName(event.target.value)}
               disabled={!editable}
@@ -353,19 +357,19 @@ export function ProjectCatalogDialog({ onClose }: { onClose: () => void }) {
                 setName("");
               }}
             >
-              Link selected
+              {t("settings:conn_linkSelected")}
             </Button>
           </div>
           <section className="space-y-2">
             <Button variant="outline" disabled={!editable} onClick={() => void scan()}>
               {busy
-                ? "Working…"
-                : `Find GitHub matches on ${context?.execution.label ?? "this host"}`}
+                ? t("common:workingEllipsis")
+                : t("settings:conn_findGitHubMatchesOn", {
+                    value0: context?.execution.label ?? t("common:thisHost"),
+                  })}
             </Button>
             <p className="text-ui-xs text-muted-foreground">
-              Suggestions require confirmation. Multiple repositories, other Git servers and
-              projects without a remote can be linked manually. Preferred is a label, never an
-              automatic fallback.
+              {t("settings:conn_suggestionsNeedConfirm")}
             </p>
             {catalogSuggestions(catalog).map(([a, b]) => (
               <div
@@ -380,7 +384,7 @@ export function ProjectCatalogDialog({ onClose }: { onClose: () => void }) {
                   disabled={!editable}
                   onClick={() => save(linkCheckouts(catalog, [a, b], a.name, crypto.randomUUID()))}
                 >
-                  Confirm link
+                  {t("settings:conn_confirmLink")}
                 </Button>
                 <Button
                   size="sm"
@@ -388,7 +392,7 @@ export function ProjectCatalogDialog({ onClose }: { onClose: () => void }) {
                   disabled={!editable}
                   onClick={() => save(excludeSuggestion(catalog, a, b))}
                 >
-                  Dismiss
+                  {t("common:actionDismiss")}
                 </Button>
               </div>
             ))}

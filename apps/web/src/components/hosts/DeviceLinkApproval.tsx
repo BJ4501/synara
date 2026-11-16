@@ -20,6 +20,7 @@ import {
 } from "~/hooks/useDesktopTopBarGutter";
 import { cn } from "~/lib/utils";
 import { SETTINGS_CARD_CLASS_NAME } from "~/settingsPanelStyles";
+import { useTranslation } from "~/i18n";
 
 type ApprovalState =
   | { readonly status: "idle" }
@@ -50,9 +51,10 @@ export function DeviceCodeField({
   onSubmit: () => void;
   describedBy?: string;
 }) {
+  const { t } = useTranslation();
   return (
     <ShortCodeField
-      label="Device code"
+      label={t("settings:conn_deviceCode")}
       value={value}
       codeLength={DEVICE_USER_CODE_LENGTH}
       groupSize={4}
@@ -66,6 +68,7 @@ export function DeviceCodeField({
 }
 
 export function DeviceLinkApproval() {
+  const { t } = useTranslation();
   const account = useAccount();
   const [code, setCode] = useState("");
   const [state, setState] = useState<ApprovalState>({ status: "idle" });
@@ -104,23 +107,24 @@ export function DeviceLinkApproval() {
           )}
         >
           <SidebarHeaderNavigationControls />
-          <span className="text-ui-lg font-medium text-foreground">Link a machine</span>
+          <span className="text-ui-lg font-medium text-foreground">
+            {t("settings:conn_linkAMachine")}
+          </span>
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-8 sm:px-6">
           <div className="mx-auto w-full max-w-lg space-y-4">
             <div className="space-y-1">
-              <h1 className="font-display text-ui-lg text-foreground">Approve a device code</h1>
-              <p className="text-ui text-muted-foreground">
-                A machine without a browser prints a short code when it asks to join your account.
-                Enter it here to link it. Codes never contain I, O, 0 or 1.
-              </p>
+              <h1 className="font-display text-ui-lg text-foreground">
+                {t("settings:conn_approveDeviceCode")}
+              </h1>
+              <p className="text-ui text-muted-foreground">{t("settings:conn_deviceCodeHelp")}</p>
             </div>
 
             <div className={cn(SETTINGS_CARD_CLASS_NAME, "space-y-4 p-4")}>
               {signedIn ? null : (
                 <p className="text-ui text-muted-foreground" role="status">
-                  Sign in to approve a device code.
+                  {t("settings:conn_signInToApproveDeviceCode")}
                 </p>
               )}
               <DeviceCodeField
@@ -138,7 +142,7 @@ export function DeviceLinkApproval() {
 
               <div className="flex items-center gap-3">
                 <Button size="sm" disabled={!canSubmit} onClick={() => void submit()}>
-                  {submitting ? "Approving..." : "Approve"}
+                  {submitting ? t("common:approvingDots") : t("common:actionApprove")}
                 </Button>
                 <span
                   id={statusId}
@@ -150,12 +154,12 @@ export function DeviceLinkApproval() {
                   )}
                 >
                   {state.status === "approved"
-                    ? "Approved. The machine will finish linking on its own."
+                    ? t("settings:conn_approvedMachineWillFinish")
                     : state.status === "failed"
                       ? state.message
                       : isCompleteDeviceUserCode(code)
-                        ? "Ready to approve."
-                        : `Enter all ${DEVICE_USER_CODE_LENGTH} characters.`}
+                        ? t("settings:conn_readyToApprove")
+                        : t("settings:conn_enterAllCharacters")}
                 </span>
               </div>
             </div>

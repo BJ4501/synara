@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useRemoteSettingsComputerRoute } from "../lib/hosts/settingsComputer";
 import { useWorkspaceSessions } from "../lib/hosts/workspaceSessions";
+import { useTranslation } from "~/i18n";
 
 export const Route = createFileRoute("/_chat/remote")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -11,6 +12,7 @@ export const Route = createFileRoute("/_chat/remote")({
 });
 
 function RemoteWorkspaceRoute() {
+  const { t } = useTranslation();
   const { environment, path } = Route.useSearch();
   const session = useWorkspaceSessions().find(
     (item) => item.host.executionScope.environmentId === environment,
@@ -25,8 +27,8 @@ function RemoteWorkspaceRoute() {
       role="status"
     >
       {session
-        ? (session.error ?? `Opening ${session.host.hostName}…`)
-        : "This computer is not connected. Open Settings → Connections to reconnect it."}
+        ? (session.error ?? t("settings:conn_openingHost", { value0: session.host.hostName }))
+        : t("settings:conn_computerNotConnected")}
     </div>
   );
 }
