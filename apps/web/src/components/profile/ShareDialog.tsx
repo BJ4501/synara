@@ -256,7 +256,7 @@ export function ShareDialog({
               </button>
             ) : (
               <p className="text-center text-ui-xs leading-snug text-muted-foreground">
-                Your profile is private. Make it public in Edit profile to share a link to it.
+                {t("settings:profile_privateMakePublic")}
               </p>
             ))}
 

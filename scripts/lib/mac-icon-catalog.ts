@@ -23,7 +23,7 @@ export const MAC_ICON_RELEASE_XCODE_VERSION = "26.3";
 export const MAC_ICON_RELEASE_DEVELOPER_DIR = `/Applications/Xcode_${MAC_ICON_RELEASE_XCODE_VERSION}.app/Contents/Developer`;
 // Every packaged flavor; scripts/mac-icon-catalog.test.ts keeps this equal to
 // SYNARA_PACKAGED_DESKTOP_FLAVORS, which this file cannot import before install.
-export const MAC_ICON_FLAVORS = ["production", "canary", "cua", "beta", "remote"] as const;
+export const MAC_ICON_FLAVORS = ["production", "canary", "cua", "beta", "remote", "zh-cn"] as const;
 export type MacIconFlavor = (typeof MAC_ICON_FLAVORS)[number];
 
 const KEY_PATTERN = /^mac-icon-v1-[a-f0-9]{64}$/;

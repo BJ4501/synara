@@ -79,10 +79,11 @@ type OpenInPickerContentProps = OpenInPickerProps & {
 };
 
 export function OpenInPicker(props: OpenInPickerProps) {
+  const { t } = useTranslation();
   if (readExecutionContext()?.remote && !props.primaryAction)
     return (
       <span className="text-ui-xs text-muted-foreground" title={REMOTE_NATIVE_UNAVAILABLE}>
-        External editor unavailable remotely
+        {t("settings:hosts_externalEditorUnavailable")}
       </span>
     );
   return <LocalOpenInPicker {...props} />;

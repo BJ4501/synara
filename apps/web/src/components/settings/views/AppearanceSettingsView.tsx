@@ -22,6 +22,7 @@ import {
 } from "~/appSettings";
 import { ThemePackEditor } from "~/components/ThemePackEditor";
 import { AppIconPicker } from "~/components/settings/AppIconPicker";
+import { LanguageSettingsRow } from "~/components/settings/LanguageSettingsRow";
 import { BooleanSettingRow } from "~/components/settings/BooleanSettingRow";
 import {
   SettingResetButton,
@@ -218,6 +219,10 @@ export function AppearanceSettingsView(binding: AppSettingsBinding) {
   }, [settings.terminalFontFamily]);
   return (
     <div className="space-y-6">
+      <SettingsSection title="common:general_languageAria">
+        <LanguageSettingsRow {...binding} />
+      </SettingsSection>
+
       <SettingsSectionShell
         title="onboarding:changed_theme"
         action={

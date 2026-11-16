@@ -29,6 +29,9 @@ import {
   MAC_ICON_ASSET_NAME,
   MAC_ICON_COMPOSER_DEPLOYMENT_TARGET,
   MAC_WINDOW_MATERIAL_ADDON_STAGE_PATH,
+  shouldDisablePackagedDesktopUpdateFeed,
+  shouldSkipNativeNpmRebuild,
+  stagedDesktopDependencyInstall,
   validateDesktopNativeBuildHost,
 } from "./lib/desktop-platform-build-config.ts";
 import { stageCloudflared } from "./lib/cloudflared.ts";
@@ -37,7 +40,10 @@ import {
   SYNARA_PACKAGED_DESKTOP_FLAVORS,
   type SynaraPackagedDesktopFlavor,
 } from "@synara/shared/desktopIdentity";
-import { createDesktopArtifactIdentity } from "./lib/desktop-artifact-identity.ts";
+import {
+  createDesktopArtifactIdentity,
+  resolveDesktopArtifactVersion,
+} from "./lib/desktop-artifact-identity.ts";
 import { parseBooleanEnvValue } from "./lib/env-bool.ts";
 import { finalizeSignedMacDmg, rebuildUnsignedMacDmg } from "./lib/mac-dmg-finalize.ts";
 import { finalizeMacUpdateZip } from "./lib/mac-update-zip-finalize.ts";
@@ -854,17 +860,30 @@ const installFrozenStageDependencies = Effect.fn("installFrozenStageDependencies
     // install already passed. Its --production flag also forces frozen mode,
     // so use the equivalent dependency omission and allow only the temporary
     // staging copy to update; the verified source lockfile remains untouched.
+    // Linux-hosted custom Windows NSIS builds must fetch win32 optional
+    // binaries; official releases still package on windows-2022. --os=win32 is
+    // Windows-target only and must never reach Linux/mac packaging.
+    const stagedInstall = stagedDesktopDependencyInstall({
+      platform,
+      arch,
+      hostPlatform: process.platform,
+    });
+    const winInstall = ChildProcess.make({
+      cwd: stageAppDir,
+      ...commandOutputOptions(verbose),
+      // Windows needs shell mode to resolve .cmd shims (e.g. bun.cmd).
+      shell: process.platform === "win32",
+    });
+    const cpu = arch === "universal" ? "*" : arch;
     yield* runCommand(
-      ChildProcess.make({
-        cwd: stageAppDir,
-        ...commandOutputOptions(verbose),
-        // Windows needs shell mode to resolve .cmd shims (e.g. bun.cmd).
-        shell: process.platform === "win32",
-      })`bun install --omit=dev --ignore-scripts --linker hoisted`,
+      stagedInstall.windowsCrossHost
+        ? winInstall`bun install --omit=dev --ignore-scripts --linker hoisted --os=win32 --cpu=${cpu}`
+        : winInstall`bun install --omit=dev --ignore-scripts --linker hoisted`,
     );
   } else {
     // Optional per-CPU packages (Claude SDK, esbuild, msgpackr) must match the
     // target, not the host: release CI builds the Intel app on Apple Silicon.
+    // These --cpu flags are architecture selectors, not Windows cross-host flags.
     const cpu = arch === "universal" ? "*" : arch;
     yield* runCommand(
       ChildProcess.make({
@@ -915,11 +934,22 @@ const createBuildConfig = Effect.fn("createBuildConfig")(function* (
       buildResources: "apps/desktop/resources",
     },
     forceCodeSigning: signed,
+    // Official Windows NSIS builds run on windows-2022 and rebuild native
+    // modules there. Linux-hosted custom packaging cannot cross-compile with
+    // node-gyp; it uses the win32 optional binaries fetched for the target.
+    ...(shouldSkipNativeNpmRebuild({ platform, hostPlatform: process.platform })
+      ? { npmRebuild: false }
+      : {}),
   };
   const publishConfig = resolveGitHubPublishConfig();
-  if (artifactIdentity.identity.usesScriptedUpdates) {
-    // Experimental bundles must never contain a Stable updater feed, even
-    // when built from a shell used by the release workflow.
+  if (
+    shouldDisablePackagedDesktopUpdateFeed({
+      usesScriptedUpdates: artifactIdentity.identity.usesScriptedUpdates,
+      disableAutoUpdate: process.env.SYNARA_DISABLE_AUTO_UPDATE === "1",
+    })
+  ) {
+    // Experimental bundles and custom installers must never contain a Stable
+    // updater feed, even when built from a shell used by the release workflow.
     buildConfig.publish = null;
   } else if (publishConfig) {
     buildConfig.publish = [publishConfig];
@@ -1139,7 +1169,11 @@ const buildDesktopArtifact = Effect.fn("buildDesktopArtifact")(function* (
       }),
   });
 
-  const appVersion = options.version ?? serverPackageJson.version;
+  const appVersion = resolveDesktopArtifactVersion({
+    flavor: options.flavor,
+    explicitVersion: options.version,
+    packageVersion: serverPackageJson.version,
+  });
   const hasSourceCommit = options.sourceCommit !== undefined;
   const hasLockfileSha256 = options.lockfileSha256 !== undefined;
   const exactProvenanceRequested =

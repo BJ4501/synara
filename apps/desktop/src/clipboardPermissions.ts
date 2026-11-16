@@ -1,11 +1,5 @@
 import type { WebContents } from "electron";
-import {
-  SYNARA_BETA_DESKTOP_SCHEME,
-  SYNARA_CANARY_DESKTOP_SCHEME,
-  SYNARA_CUA_DESKTOP_SCHEME,
-  SYNARA_DESKTOP_SCHEME,
-  SYNARA_REMOTE_DESKTOP_SCHEME,
-} from "@synara/shared/desktopIdentity";
+import { isSynaraPackagedDesktopAppScheme } from "@synara/shared/desktopIdentity";
 
 /** Copy buttons share the OS clipboard; background reads remain denied. */
 export function isClipboardWritePermission(
@@ -25,12 +19,7 @@ export function isClipboardWritePermission(
     // Chromium enforces document focus. Native window focus may already have
     // returned to the composer when an asynchronous copy requests permission.
     const page = new URL(requester.getURL());
-    const trustedScheme =
-      page.protocol === `${SYNARA_DESKTOP_SCHEME}:` ||
-      page.protocol === `${SYNARA_CANARY_DESKTOP_SCHEME}:` ||
-      page.protocol === `${SYNARA_CUA_DESKTOP_SCHEME}:` ||
-      page.protocol === `${SYNARA_BETA_DESKTOP_SCHEME}:` ||
-      page.protocol === `${SYNARA_REMOTE_DESKTOP_SCHEME}:`;
+    const trustedScheme = isSynaraPackagedDesktopAppScheme(page.protocol);
     if (trustedScheme && (page.host !== "app" || page.username || page.password)) return false;
     if (
       page.protocol !== "https:" &&

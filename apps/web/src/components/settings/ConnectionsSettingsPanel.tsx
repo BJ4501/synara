@@ -9,6 +9,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { useAccount } from "~/hooks/useAccount";
+import { useTranslation } from "~/i18n";
 import { accountBillingQueryOptions } from "~/lib/accountReactQuery";
 import { readExecutionContext } from "~/lib/hosts/executionContext";
 import { isMacNavigatorPlatform } from "~/lib/utils";
@@ -44,17 +45,15 @@ export function ConnectionsSettingsPanel({
       tab === "this" &&
       capability?.remoteConnections === true,
   });
+  const { t } = useTranslation();
   if (!active) return null;
 
   if (capability?.remoteConnections !== true)
     return (
-      <SettingsSection title="Connections">
+      <SettingsSection title="settings:navGroup_connections">
         <SettingsListRow
-          title="Unavailable in this build"
-          description={
-            capability?.remoteUnavailableReason ??
-            "Update the local controller to manage remote access."
-          }
+          title={t("settings:conn_unavailableInBuild")}
+          description={capability?.remoteUnavailableReason ?? t("settings:conn_updateController")}
         />
       </SettingsSection>
     );
@@ -62,13 +61,13 @@ export function ConnectionsSettingsPanel({
   const signedIn = account.me !== null;
   if (!signedIn)
     return (
-      <SettingsSection title="Connections">
+      <SettingsSection title="settings:navGroup_connections">
         <SettingsListRow
-          title="Sign in to connect your devices"
-          description="Use the same account on this computer and on the devices that control it."
+          title={t("settings:conn_signInToConnectDevices")}
+          description={t("settings:conn_useSameAccountDevices")}
           actions={
             <Button size="xs" shape="capsule" onClick={openSignIn}>
-              Sign in
+              {t("common:actionSignIn")}
             </Button>
           }
         />
@@ -85,13 +84,13 @@ export function ConnectionsSettingsPanel({
   return (
     <div className="space-y-6">
       <SegmentedPicker<ConnectionsTab>
-        ariaLabel="Connections"
+        ariaLabel={t("settings:navGroup_connections")}
         variant="buttons"
         value={tab}
         onValueChange={setTab}
         options={[
-          { value: "this", label: `Control this ${computerNoun}` },
-          { value: "others", label: "Control other devices" },
+          { value: "this", label: t("settings:conn_controlThisNoun", { value0: computerNoun }) },
+          { value: "others", label: t("settings:conn_controlOtherDevices") },
           { value: "ssh", label: "SSH" },
         ]}
       />
@@ -122,12 +121,16 @@ export function ConnectionsSettingsPanel({
 
 /** Only what exists today: device-code linking and a manual SSH forwarding port. */
 function ConnectionsSsh() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
+  const sshCommand = "--ssh-forward-port";
+  const sshHelp = t("settings:conn_startWithThenSsh", { value0: sshCommand });
+  const sshCommandAt = sshHelp.indexOf(sshCommand);
   return (
     <SettingsSection title="SSH">
       <SettingsListRow
-        title="Link a headless machine"
-        description="A machine without a browser prints a short code. Enter it here to link it to your account."
+        title={t("settings:conn_linkHeadless")}
+        description={t("settings:conn_headlessHelp")}
         actions={
           <Button
             size="xs"
@@ -135,18 +138,22 @@ function ConnectionsSsh() {
             variant="subtle"
             onClick={() => void navigate({ to: "/link" })}
           >
-            Enter a code
+            {t("settings:conn_enterACode")}
           </Button>
         }
       />
       <SettingsListRow
-        title="Port forwarding"
+        title={t("settings:conn_portForwarding")}
         description={
-          <>
-            Start Synara on the remote machine with{" "}
-            <code className="font-mono text-ui-sm text-foreground">--ssh-forward-port</code>, then
-            forward that port over SSH. Synara does not set up SSH keys or routes for you.
-          </>
+          sshCommandAt === -1 ? (
+            sshHelp
+          ) : (
+            <>
+              {sshHelp.slice(0, sshCommandAt)}
+              <code className="font-mono text-ui-sm text-foreground">{sshCommand}</code>
+              {sshHelp.slice(sshCommandAt + sshCommand.length)}
+            </>
+          )
         }
       />
     </SettingsSection>

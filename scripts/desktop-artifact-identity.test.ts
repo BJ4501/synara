@@ -4,7 +4,10 @@ import {
   resolveSynaraDesktopRuntimeFlavor,
   synaraDesktopIdentity,
 } from "@synara/shared/desktopIdentity";
-import { createDesktopArtifactIdentity } from "./lib/desktop-artifact-identity.ts";
+import {
+  createDesktopArtifactIdentity,
+  resolveDesktopArtifactVersion,
+} from "./lib/desktop-artifact-identity.ts";
 
 describe("desktop artifact identity", () => {
   it.each(["mac", "win"] as const)(
@@ -74,6 +77,48 @@ describe("desktop artifact identity", () => {
       expect(result.identity.usesScriptedUpdates).toBe(false);
     },
   );
+
+  it("isolates packaged zh-CN Windows identity from production", () => {
+    const result = createDesktopArtifactIdentity({ platform: "win", flavor: "zh-cn" });
+    expect(result.packageMetadata).toEqual({
+      name: "synara-desktop-zh-cn",
+      productName: "Synara zh-CN",
+      synaraDesktopFlavor: "zh-cn",
+    });
+    expect(result.buildConfig.appId).toBe("com.emanueledipietro.synara.zh-cn");
+    expect(result.buildConfig.productName).toBe("Synara zh-CN");
+    expect(result.identity.userDataDirectoryName).toBe("synara-zh-cn");
+    expect(result.identity.usesScriptedUpdates).toBe(true);
+    expect(result.buildConfig.appId).not.toBe("com.emanueledipietro.synara");
+  });
+
+  it("bumps the broken zh-CN 1.6.0 installer to 1.6.1 and leaves other flavors on the package version", () => {
+    expect(
+      resolveDesktopArtifactVersion({
+        flavor: "zh-cn",
+        packageVersion: "1.6.0",
+      }),
+    ).toBe("1.6.1");
+    expect(
+      resolveDesktopArtifactVersion({
+        flavor: "production",
+        packageVersion: "1.6.0",
+      }),
+    ).toBe("1.6.0");
+    expect(
+      resolveDesktopArtifactVersion({
+        flavor: "zh-cn",
+        packageVersion: "1.7.0",
+      }),
+    ).toBe("1.7.0");
+    expect(
+      resolveDesktopArtifactVersion({
+        flavor: "zh-cn",
+        explicitVersion: "1.6.2",
+        packageVersion: "1.6.0",
+      }),
+    ).toBe("1.6.2");
+  });
 
   it.each(["canary", "cua"] as const)(
     "refuses %s on Windows until it has an isolated installer registration",

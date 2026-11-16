@@ -20,9 +20,14 @@ import {
   SYNARA_DESKTOP_ORIGIN,
   SYNARA_DESKTOP_UPDATE_CHANNEL,
   SYNARA_DEVELOPMENT_BUNDLE_ID,
+  SYNARA_PACKAGED_DESKTOP_FLAVORS,
   SYNARA_PRODUCTION_BUNDLE_ID,
   SYNARA_REMOTE_BUNDLE_ID,
+  SYNARA_ZH_CN_BUNDLE_ID,
+  SYNARA_ZH_CN_WINDOWS_INSTALLER_VERSION,
+  isSynaraPackagedDesktopAppScheme,
   synaraDesktopIdentity,
+  synaraPackagedDesktopAppOrigins,
   synaraSourceDesktopIdentity,
 } from "./desktopIdentity";
 
@@ -170,6 +175,38 @@ describe("desktopIdentity", () => {
     expect(resolveSynaraDesktopFlavor({ isDevelopment: true, requestedFlavor: "beta" })).toBe(
       "beta",
     );
+    expect(resolveSynaraDesktopFlavor({ isDevelopment: false, requestedFlavor: "zh-cn" })).toBe(
+      "zh-cn",
+    );
+  });
+
+  it("gives the custom zh-CN installer its own identity, storage and no official updater", () => {
+    expect(SYNARA_ZH_CN_BUNDLE_ID).toBe("com.emanueledipietro.synara.zh-cn");
+    expect(synaraDesktopIdentity("zh-cn")).toEqual({
+      flavor: "zh-cn",
+      displayName: "Synara zh-CN",
+      bundleId: SYNARA_ZH_CN_BUNDLE_ID,
+      scheme: "synara-zh-cn",
+      origin: "synara-zh-cn://app",
+      entryUrl: "synara-zh-cn://app/index.html",
+      userDataDirectoryName: "synara-zh-cn",
+      defaultHomeDirectoryName: ".synara-zh-cn",
+      usesScriptedUpdates: true,
+    });
+    expect(synaraDesktopIdentity("zh-cn").bundleId).not.toBe(SYNARA_PRODUCTION_BUNDLE_ID);
+    expect(synaraDesktopIdentity("zh-cn").userDataDirectoryName).not.toBe(
+      synaraDesktopIdentity("production").userDataDirectoryName,
+    );
+    expect(synaraSourceDesktopIdentity(synaraDesktopIdentity("zh-cn")).bundleId).toBe(
+      `${SYNARA_ZH_CN_BUNDLE_ID}.source`,
+    );
+    expect(SYNARA_ZH_CN_WINDOWS_INSTALLER_VERSION).toBe("1.6.1");
+    expect(synaraPackagedDesktopAppOrigins()).toContain("synara-zh-cn://app");
+    expect(isSynaraPackagedDesktopAppScheme("synara-zh-cn:")).toBe(true);
+    expect(isSynaraPackagedDesktopAppScheme("synara-zh-cns:")).toBe(false);
+    expect(synaraPackagedDesktopAppOrigins()).toEqual(
+      SYNARA_PACKAGED_DESKTOP_FLAVORS.map((flavor) => synaraDesktopIdentity(flavor).origin),
+    );
   });
 
   it("isolates development and Canary homes from packaged Stable", () => {
@@ -180,7 +217,7 @@ describe("desktopIdentity", () => {
     expect(synaraDesktopIdentity("production").defaultHomeDirectoryName).toBe(".synara");
   });
 
-  it.each(["production", "canary", "cua", "beta", "remote"] as const)(
+  it.each(["production", "canary", "cua", "beta", "remote", "zh-cn"] as const)(
     "uses the immutable %s package flavor despite inherited source settings",
     (packagedFlavor) => {
       expect(

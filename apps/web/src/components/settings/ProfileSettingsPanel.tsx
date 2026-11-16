@@ -192,7 +192,7 @@ function ProfileContent({
           {publicUrl ? (
             <Button variant="outline" size="sm" onClick={() => openExternalLink(publicUrl)}>
               <ExternalLinkIcon />
-              Open profile
+              {t("settings:profile_openProfile")}
             </Button>
           ) : null}
           <Button
@@ -213,7 +213,7 @@ function ProfileContent({
 
       {!canEdit ? (
         <p className="text-ui-sm text-muted-foreground">
-          Profile editing is unavailable on this computer. Your account photo and name are shown.
+          {t("settings:profile_editingUnavailable")}
         </p>
       ) : null}
 
@@ -424,7 +424,9 @@ function AccountStatsBody({
       // flip back to This device.
       return (
         <div className="flex flex-col items-center gap-3 py-16 text-center">
-          <p className="text-ui-sm text-muted-foreground">Couldn’t load your account stats.</p>
+          <p className="text-ui-sm text-muted-foreground">
+            {t("settings:profile_couldntLoadStats")}
+          </p>
           <Button variant="outline" size="sm" onClick={() => void usageQuery.refetch()}>
             {t("chat:profile_tryAgain")}
           </Button>

@@ -21,6 +21,7 @@ import { useRef, type ReactNode } from "react";
 import { useAnnouncementSheetSlot } from "./announcementSheetSlot";
 import { DialogHeroBand } from "./DialogHeroBand";
 import { XIcon } from "~/lib/icons";
+import { useTranslation } from "~/i18n";
 import { Button } from "./ui/button";
 import {
   Dialog,
@@ -109,6 +110,7 @@ export function AnnouncementSheetPopup(props: AnnouncementSheetContent) {
 /** A launch sheet: a full-bleed illustrated hero with its own close, then capsule actions. */
 function FeatureAnnouncementPopup(props: AnnouncementSheetContent) {
   const sheetRef = useRef<HTMLDivElement>(null);
+  const { t } = useTranslation();
   return (
     <DialogPopup
       showCloseButton={false}
@@ -126,7 +128,7 @@ function FeatureAnnouncementPopup(props: AnnouncementSheetContent) {
           </div>
           {/* Frosted so it reads on any hero art; Escape and the backdrop close too. */}
           <DialogClose
-            aria-label="Close"
+            aria-label={t("common:app_close")}
             className="absolute end-3 top-3 rounded-lg bg-white/25 text-neutral-900 ring-1 ring-white/55 ring-inset backdrop-blur-sm [:hover,[data-pressed]]:bg-white/45 [:hover,[data-pressed]]:text-neutral-900"
             render={<Button size="icon-xs" variant="ghost" />}
           >

@@ -1,6 +1,7 @@
 // FILE: desktop-artifact-identity.ts
 // Purpose: Keeps packaged metadata, native identity and artifact names aligned.
 import {
+  SYNARA_ZH_CN_WINDOWS_INSTALLER_VERSION,
   synaraDesktopIdentity,
   type SynaraPackagedDesktopFlavor,
 } from "@synara/shared/desktopIdentity";
@@ -12,7 +13,10 @@ export function createDesktopArtifactIdentity(input: {
   // Stable's NSIS GUID deliberately survives public bundle ID changes. An
   // experimental installer must not register itself as that same product;
   // Beta and Remote have their own installer GUIDs.
-  if (input.platform === "win" && !["production", "beta", "remote"].includes(input.flavor)) {
+  if (
+    input.platform === "win" &&
+    !["production", "beta", "remote", "zh-cn"].includes(input.flavor)
+  ) {
     throw new Error("Isolated desktop flavors are currently supported on macOS and Linux only.");
   }
   const identity = synaraDesktopIdentity(input.flavor);
@@ -34,4 +38,18 @@ export function createDesktopArtifactIdentity(input: {
     },
     releaseDirectoryName: `release${suffix}`,
   };
+}
+
+/** zh-CN 1.6.0 was the broken splash/timeout payload; the replacement must sort above it. */
+export function resolveDesktopArtifactVersion(input: {
+  readonly flavor: SynaraPackagedDesktopFlavor;
+  readonly explicitVersion?: string | undefined;
+  readonly packageVersion: string;
+}): string {
+  const explicit = input.explicitVersion?.trim();
+  if (explicit) return explicit;
+  if (input.flavor === "zh-cn" && input.packageVersion === "1.6.0") {
+    return SYNARA_ZH_CN_WINDOWS_INSTALLER_VERSION;
+  }
+  return input.packageVersion;
 }

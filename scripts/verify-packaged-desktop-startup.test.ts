@@ -132,6 +132,7 @@ describe("packaged desktop startup verification", () => {
         "SYNARA_HOME",
         "SYNARA_BETA_HOME",
         "SYNARA_REMOTE_HOME",
+        "SYNARA_ZH_CN_HOME",
       ] as const) {
         expect(env[name]?.startsWith(root)).toBe(true);
         expect(existsSync(env[name]!)).toBe(true);
@@ -139,6 +140,9 @@ describe("packaged desktop startup verification", () => {
       expect(env.SYNARA_BETA_HOME).not.toBe(env.SYNARA_HOME);
       expect(env.SYNARA_REMOTE_HOME).not.toBe(env.SYNARA_HOME);
       expect(env.SYNARA_REMOTE_HOME).not.toBe(env.SYNARA_BETA_HOME);
+      expect(env.SYNARA_ZH_CN_HOME).not.toBe(env.SYNARA_HOME);
+      expect(env.SYNARA_ZH_CN_HOME).not.toBe(env.SYNARA_BETA_HOME);
+      expect(env.SYNARA_ZH_CN_HOME).not.toBe(env.SYNARA_REMOTE_HOME);
       expect(
         existsSync(
           join(

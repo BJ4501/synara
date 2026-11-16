@@ -171,10 +171,11 @@ function CursorColorField({
 }
 
 export function ComputerSettingsPanel(props: AppSettingsBinding & { readonly active: boolean }) {
+  const { t } = useTranslation();
   return readExecutionContext()?.remote ? (
     props.active ? (
       <p className="text-ui text-muted-foreground">
-        {REMOTE_NATIVE_UNAVAILABLE} Return to this computer to manage its permissions.
+        {REMOTE_NATIVE_UNAVAILABLE} {t("settings:conn_returnToManagePermissions")}
       </p>
     ) : null
   ) : (

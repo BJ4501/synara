@@ -67,7 +67,7 @@ function SignedInFooter() {
         <SidebarIconButton
           render={<MenuTrigger />}
           icon={UserIcon}
-          label={`Account: ${displayName}`}
+          label={t("common:account_label", { value0: displayName })}
           className={appRailButtonClassName(false)}
         >
           <ProfileAvatar
@@ -99,7 +99,7 @@ function SignedInFooter() {
             onClick={() => void navigate({ to: "/settings", search: { section: "usage" } })}
           >
             <SidebarContextMenuIcon icon={UsageGaugeIcon} />
-            <span>Usage</span>
+            <span>{t("settings:nav_usage")}</span>
           </MenuItem>
           {/* Saved publication can outlive Alto access. Only offer the online
               link when the account service confirms the page is available. */}
@@ -124,7 +124,7 @@ function SignedInFooter() {
           ) : (
             <MenuItem className={SIDEBAR_CONTEXT_MENU_ITEM_CLASS_NAME} onClick={openSignIn}>
               <SidebarContextMenuIcon icon={ExternalLinkIcon} />
-              <span>Finish setting up</span>
+              <span>{t("common:account_finishSettingUp")}</span>
             </MenuItem>
           )}
           {/* Hosts are an account concept (ADR 0002 — they follow the owner),
@@ -135,14 +135,14 @@ function SignedInFooter() {
             onClick={() => void navigate({ to: "/settings", search: { section: "connections" } })}
           >
             <SidebarContextMenuIcon icon={GlobeIcon} />
-            <span>Connections</span>
+            <span>{t("settings:navGroup_connections")}</span>
           </MenuItem>
           <MenuItem
             className={SIDEBAR_CONTEXT_MENU_ITEM_CLASS_NAME}
             onClick={() => void navigate({ to: "/settings" })}
           >
             <SidebarContextMenuIcon icon={SettingsIcon} />
-            <span>Settings</span>
+            <span>{t("workspace:toast_settings")}</span>
             <MenuShortcut>{settingsShortcutLabel()}</MenuShortcut>
           </MenuItem>
         </MenuGroup>
@@ -151,7 +151,7 @@ function SignedInFooter() {
           {/* Sign-out also unlinks this machine's host (ADR 0015): its key
               leaves the directory and other devices' sessions to it end. */}
           <MenuItem variant="destructive" onClick={() => void signOutWithToast(account)}>
-            <span>Sign out</span>
+            <span>{t("settings:signOut")}</span>
           </MenuItem>
         </MenuGroup>
       </ComposerPickerMenuPopup>
@@ -161,25 +161,28 @@ function SignedInFooter() {
 
 function SignedOutFooter() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const openSignIn = useAccountDialogStore((state) => state.openSignIn);
 
   return (
     <Menu>
-      <RemoteConnectionsCoachmark signedIn={false} tooltip="Sign in">
+      <RemoteConnectionsCoachmark signedIn={false} tooltip={t("chat:providerModelPicker_signIn")}>
         <SidebarIconButton
           render={<MenuTrigger />}
           icon={UserIcon}
           iconClassName="size-5"
-          label="Sign in"
+          label={t("chat:providerModelPicker_signIn")}
           className={appRailButtonClassName(false)}
         />
       </RemoteConnectionsCoachmark>
       <ComposerPickerMenuPopup side="right" align="end" className="w-64 min-w-64">
         <MenuGroup>
           <div className="flex flex-col gap-0.5 px-2 py-1.5">
-            <span className="text-ui font-medium text-foreground">You&rsquo;re in local mode</span>
+            <span className="text-ui font-medium text-foreground">
+              {t("common:account_localMode")}
+            </span>
             <span className="text-ui-sm leading-snug text-muted-foreground">
-              Sign in to sync your profile and workspace across devices.
+              {t("common:account_signInToSync")}
             </span>
           </div>
           <div className="px-2 pt-1 pb-1.5">
@@ -187,7 +190,7 @@ function SignedOutFooter() {
               className="w-full justify-center rounded-lg border border-transparent bg-primary text-primary-foreground data-highlighted:bg-primary/90 data-highlighted:text-primary-foreground"
               onClick={openSignIn}
             >
-              Sign in
+              {t("chat:providerModelPicker_signIn")}
             </MenuItem>
           </div>
         </MenuGroup>
@@ -198,7 +201,7 @@ function SignedOutFooter() {
             onClick={() => void navigate({ to: "/settings" })}
           >
             <SidebarContextMenuIcon icon={SettingsIcon} />
-            <span>Settings</span>
+            <span>{t("workspace:toast_settings")}</span>
             <MenuShortcut>{settingsShortcutLabel()}</MenuShortcut>
           </MenuItem>
         </MenuGroup>

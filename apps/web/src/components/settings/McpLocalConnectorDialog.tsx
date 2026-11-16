@@ -13,6 +13,7 @@ import {
   DialogFooter,
 } from "~/components/ui/dialog";
 import { Input } from "~/components/ui/input";
+import { useTranslation } from "~/i18n";
 import { ensureNativeApi } from "~/nativeApi";
 
 export function McpLocalConnectorDialog(props: {
@@ -21,6 +22,7 @@ export function McpLocalConnectorDialog(props: {
   onUrl: (url: string) => void;
   onConnected: (connector: McpConnector) => void;
 }) {
+  const { t } = useTranslation();
   const formId = useId();
   const [mode, setMode] = useState<"url" | "stdio">("url");
   const [url, setUrl] = useState("");
@@ -98,29 +100,26 @@ export function McpLocalConnectorDialog(props: {
     >
       <DialogPopup className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Add local server</DialogTitle>
-          <DialogDescription>
-            Connect an app on this computer by loopback URL, or approve a command to run as an MCP
-            server.
-          </DialogDescription>
+          <DialogTitle>{t("settings:mcp_addLocalServer")}</DialogTitle>
+          <DialogDescription>{t("settings:mcp_localServerHelp")}</DialogDescription>
         </DialogHeader>
         <DialogPanel>
           <form id={formId} className="space-y-3 text-ui" onSubmit={(event) => void submit(event)}>
             <label className="block">
-              Transport
+              {t("settings:mcp_transport")}
               <select
-                aria-label="Local server transport"
+                aria-label={t("settings:mcp_localServerTransport")}
                 value={mode}
                 className="ml-2 rounded border bg-background p-1 text-ui"
                 onChange={(event) => setMode(event.target.value as "url" | "stdio")}
               >
-                <option value="url">Local HTTP URL</option>
-                <option value="stdio">Command (stdio)</option>
+                <option value="url">{t("settings:mcp_localHttpUrl")}</option>
+                <option value="stdio">{t("settings:mcp_commandStdio")}</option>
               </select>
             </label>
             {mode === "url" ? (
               <Input
-                aria-label="Local MCP URL"
+                aria-label={t("settings:mcp_localMcpUrl")}
                 placeholder="http://127.0.0.1:29979/mcp"
                 value={url}
                 onChange={(event) => setUrl(event.target.value)}
@@ -129,7 +128,7 @@ export function McpLocalConnectorDialog(props: {
             ) : (
               <>
                 <label className="block">
-                  Name
+                  {t("common:scripts_name")}
                   <Input
                     value={name}
                     onChange={(event) => setName(event.target.value)}
@@ -138,7 +137,7 @@ export function McpLocalConnectorDialog(props: {
                   />
                 </label>
                 <label className="block">
-                  Command
+                  {t("settings:mcp_command")}
                   <Input
                     value={command}
                     placeholder="~/.paper/bin/paper"
@@ -147,7 +146,7 @@ export function McpLocalConnectorDialog(props: {
                   />
                 </label>
                 <label className="block">
-                  Arguments (JSON array)
+                  {t("settings:mcp_argumentsJsonArray")}
                   <Input
                     value={args}
                     placeholder={'["mcp"]'}
@@ -156,15 +155,15 @@ export function McpLocalConnectorDialog(props: {
                   />
                 </label>
                 <label className="block">
-                  Working directory
+                  {t("settings:mcp_workingDirectory")}
                   <Input
                     value={cwd}
-                    placeholder="Home directory"
+                    placeholder={t("settings:mcp_homeDirectory")}
                     onChange={(event) => setCwd(event.target.value)}
                   />
                 </label>
                 <label className="block">
-                  Environment (JSON object, values hidden)
+                  {t("settings:mcp_environmentJsonHidden")}
                   <Input
                     type="password"
                     autoComplete="off"
@@ -174,8 +173,7 @@ export function McpLocalConnectorDialog(props: {
                   />
                 </label>
                 <p className="text-ui-sm text-muted-foreground">
-                  Adding this server runs the exact command and arguments above. Environment values
-                  are saved in Synara’s secrets store.
+                  {t("settings:mcp_addingRunsCommand")}
                 </p>
               </>
             )}
@@ -195,10 +193,10 @@ export function McpLocalConnectorDialog(props: {
               props.onOpenChange(false);
             }}
           >
-            Cancel
+            {t("common:form_cancel")}
           </Button>
           <Button type="submit" form={formId} disabled={mutation.isPending}>
-            {mode === "stdio" ? "Add and run server" : "Continue"}
+            {mode === "stdio" ? t("settings:mcp_addAndRunServer") : t("common:actionContinue")}
           </Button>
         </DialogFooter>
       </DialogPopup>

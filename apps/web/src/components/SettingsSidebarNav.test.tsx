@@ -34,6 +34,13 @@ describe("settings labels", () => {
     expect(result?.id).toBe("general:default-provider");
     expect(settingsSearchEntryTarget(result!)).toBe("setting-default-provider");
   });
+
+  it("finds the interface language selector with a stable link", () => {
+    const [result] = rankSettingsSearchEntries("language", 12);
+    expect(result?.id).toBe("appearance:language");
+    expect(settingsSearchEntryTarget(result!)).toBe("setting-language");
+    expect(settingsSearchEntryTitle(result!)).toBe("Language");
+  });
 });
 
 describe("rankSettingsSearchEntries", () => {

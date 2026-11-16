@@ -199,19 +199,17 @@ function AddComputerDialogContent({
   return (
     <DialogPopup className="max-w-md">
       <DialogHeader>
-        <DialogTitle>Add a computer</DialogTitle>
-        <DialogDescription>
-          On the other computer, open Settings → Connections and click Add. Enter the code it shows.
-        </DialogDescription>
+        <DialogTitle>{t("settings:conn_addAComputer")}</DialogTitle>
+        <DialogDescription>{t("settings:conn_addComputerHelp")}</DialogDescription>
       </DialogHeader>
       <DialogPanel className="space-y-4">
         {paired ? (
           <p role="status" className="py-4 text-center text-ui text-foreground">
-            {paired} approved this computer. You can connect to it now.
+            {t("settings:conn_approvedThisComputer", { value0: paired })}
           </p>
         ) : !preview ? (
           <ShortCodeField
-            label="Pairing code"
+            label={t("settings:conn_pairingCode")}
             value={code}
             codeLength={DEVICE_USER_CODE_LENGTH}
             groupSize={DEVICE_USER_CODE_GROUP_SIZE}
@@ -223,10 +221,7 @@ function AddComputerDialogContent({
         ) : (
           <div className="space-y-3">
             <p className="text-ui font-medium">{preview.label}</p>
-            <p className="text-ui-sm text-muted-foreground">
-              Check that the other computer shows this identity. Finding it by code alone does not
-              verify it.
-            </p>
+            <p className="text-ui-sm text-muted-foreground">{t("settings:conn_checkIdentity")}</p>
             <RootFingerprint
               value={preview.rootFingerprint}
               className="rounded-xl border border-[color:var(--color-border)] px-3 py-2"
@@ -239,13 +234,12 @@ function AddComputerDialogContent({
                 disabled={busy || waiting}
               />
               <label htmlFor={confirmationId} className="text-ui-sm">
-                The identity matches on both computers
+                {t("settings:conn_identityMatches")}
               </label>
             </div>
             {deviceJkt ? (
               <p className="text-ui-sm text-muted-foreground">
-                If asked to approve, this computer appears as{" "}
-                <code className="break-all font-mono text-ui-xs text-foreground">{deviceJkt}</code>
+                {t("settings:conn_ifAskedAppearsAs", { value0: deviceJkt })}
               </p>
             ) : null}
           </div>
@@ -264,13 +258,13 @@ function AddComputerDialogContent({
       <DialogFooter>
         {paired ? (
           <Button shape="capsule" onClick={onClose}>
-            Done
+            {t("common:actionDone")}
           </Button>
         ) : preview ? (
           <>
             {waiting ? (
               <Button shape="capsule" variant="subtle" onClick={cancelRequest}>
-                Cancel request
+                {t("settings:conn_cancelRequest")}
               </Button>
             ) : (
               <Button
@@ -279,7 +273,7 @@ function AddComputerDialogContent({
                 disabled={busy}
                 onClick={() => void forgetPrevious()}
               >
-                Forget previous pairing
+                {t("settings:conn_forgetPreviousPairing")}
               </Button>
             )}
             <Button
@@ -294,13 +288,13 @@ function AddComputerDialogContent({
                 });
               }}
             >
-              {waiting ? "Waiting for approval…" : "Request access"}
+              {waiting ? t("settings:conn_waitingForApproval") : t("settings:conn_requestAccess")}
             </Button>
           </>
         ) : (
           <>
             <Button shape="capsule" variant="subtle" onClick={onClose}>
-              Cancel
+              {t("common:form_cancel")}
             </Button>
             {deviceRecoveryId ? (
               <Button
@@ -316,7 +310,7 @@ function AddComputerDialogContent({
               </Button>
             ) : (
               <Button shape="capsule" disabled={busy || !complete} onClick={find}>
-                Find computer
+                {t("settings:conn_findComputer")}
               </Button>
             )}
           </>

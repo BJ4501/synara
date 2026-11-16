@@ -84,6 +84,7 @@ import {
 } from "../../sidebarRowStyles";
 import { cn, randomUUID } from "../../lib/utils";
 import { showUndoToast } from "../../lib/threadUndoToast";
+import { useTranslation } from "~/i18n";
 
 type SortableProjectHandleProps = Pick<
   ReturnType<typeof useSortable>,
@@ -508,6 +509,7 @@ export function WorkspaceProjectItem({
     entry: WorkspaceThreadEntry,
   ) => ((anchorId: string) => ReactNode) | undefined;
 }) {
+  const { t } = useTranslation();
   const manualSorting = manualSortingProp ?? false;
   const [menu, setMenu] = useState<WorkspaceMenuState | null>(null);
   const [renameSession, setRenameSession] = useState<WorkspaceSession | null>(null);
@@ -582,7 +584,7 @@ export function WorkspaceProjectItem({
             trailing={
               status ? (
                 <span
-                  aria-label={`Project status: ${status.label}`}
+                  aria-label={t("settings:conn_projectStatus", { value0: status.label })}
                   title={status.label}
                   className={cn(
                     "ml-auto flex min-w-[1.625rem] shrink-0 items-center justify-end self-center",
@@ -598,7 +600,10 @@ export function WorkspaceProjectItem({
         <SidebarSectionToolbar placement="overlay" revealOnHover>
           <SidebarIconButton
             icon={EllipsisIcon}
-            label={`Project actions for ${project.name} on ${hostName}`}
+            label={t("settings:conn_projectActionsForOn", {
+              value0: project.name,
+              value1: hostName,
+            })}
             disabled={!online || !session.navigation?.sidebar}
             onClick={(event) => {
               event.preventDefault();
@@ -609,7 +614,7 @@ export function WorkspaceProjectItem({
           />
           <SidebarIconButton
             icon={NewThreadIcon}
-            label={`New chat in ${project.name} on ${hostName}`}
+            label={t("settings:conn_newChatInOn", { value0: project.name, value1: hostName })}
             disabled={!online}
             onClick={startChat}
           />
@@ -648,7 +653,7 @@ export function WorkspaceProjectItem({
                       onMouseDown={(event) => event.preventDefault()}
                       onClick={() => setExtraPages(paging.effectiveExtraPages + 1)}
                     >
-                      <span>Show more</span>
+                      <span>{t("common:showMoreSimple")}</span>
                     </SidebarMenuSubButton>
                   ) : null}
                   {paging.canShowLess ? (
@@ -662,7 +667,7 @@ export function WorkspaceProjectItem({
                       onMouseDown={(event) => event.preventDefault()}
                       onClick={() => setExtraPages(Math.max(0, paging.effectiveExtraPages - 1))}
                     >
-                      <span>Show less</span>
+                      <span>{t("common:showLess")}</span>
                     </SidebarMenuSubButton>
                   ) : null}
                 </div>
@@ -676,7 +681,7 @@ export function WorkspaceProjectItem({
         onClose={() => setMenu(null)}
         items={[
           {
-            label: "Rename project",
+            label: t("settings:conn_renameProject"),
             icon: PencilIcon,
             onClick: () => setRenameSession(actionSession),
           },
@@ -695,8 +700,8 @@ export function WorkspaceProjectItem({
       </WorkspaceRowMenu>
       <RenameDialog
         open={renameSession !== null}
-        title="Rename project"
-        description="Choose a recognizable name for this checkout."
+        title={t("settings:conn_renameProject")}
+        description={t("settings:conn_recognizableCheckoutName")}
         initialValue={project.name}
         allowEmpty
         onOpenChange={(open) => {

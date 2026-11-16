@@ -9,7 +9,11 @@ import {
   SYNARA_BETA_WINDOWS_INSTALLER_GUID,
   SYNARA_STABLE_WINDOWS_INSTALLER_GUID,
 } from "@synara/shared/betaChannel";
-import type { SynaraPackagedDesktopFlavor } from "@synara/shared/desktopIdentity";
+import {
+  SYNARA_ZH_CN_WINDOWS_INSTALLER_GUID,
+  type SynaraPackagedDesktopFlavor,
+} from "@synara/shared/desktopIdentity";
+import { UI_LOCALES } from "@synara/shared/uiLocale";
 
 import {
   createDesktopBundleFilePatterns,
@@ -81,6 +85,74 @@ export interface DesktopNativeBuildHostInput {
   readonly hostArch: string;
   readonly hostPlatform: NodeJS.Platform;
   readonly platform: "linux" | "mac" | "win";
+}
+
+export function shouldDisablePackagedDesktopUpdateFeed(input: {
+  readonly usesScriptedUpdates: boolean;
+  readonly disableAutoUpdate: boolean;
+}): boolean {
+  return input.usesScriptedUpdates || input.disableAutoUpdate;
+}
+
+/** Skip node-gyp rebuild only for Linux/mac hosts packaging a Windows target. */
+export function shouldSkipNativeNpmRebuild(input: {
+  readonly platform: "linux" | "mac" | "win";
+  readonly hostPlatform: NodeJS.Platform;
+}): boolean {
+  return input.platform === "win" && input.hostPlatform !== "win32";
+}
+
+/** Linux/mac packaging must never receive Windows optional-binary selectors. */
+export function stagedDesktopDependencyInstall(input: {
+  readonly platform: "linux" | "mac" | "win";
+  readonly arch: "arm64" | "x64" | "universal";
+  readonly hostPlatform: NodeJS.Platform;
+}): {
+  readonly bunInstallArgs: readonly string[];
+  readonly windowsCrossHost: boolean;
+  readonly npmRebuild: boolean | undefined;
+} {
+  const cpu = input.arch === "universal" ? "*" : input.arch;
+  if (input.platform === "win") {
+    const windowsCrossHost = input.hostPlatform !== "win32";
+    return {
+      bunInstallArgs: [
+        "install",
+        "--omit=dev",
+        "--ignore-scripts",
+        "--linker",
+        "hoisted",
+        ...(windowsCrossHost ? (["--os=win32", `--cpu=${cpu}`] as const) : []),
+      ],
+      windowsCrossHost,
+      npmRebuild: windowsCrossHost ? false : undefined,
+    };
+  }
+  return {
+    bunInstallArgs: [
+      "install",
+      "--frozen-lockfile",
+      "--ignore-scripts",
+      "--linker",
+      "hoisted",
+      `--cpu=${cpu}`,
+    ],
+    windowsCrossHost: false,
+    npmRebuild: undefined,
+  };
+}
+
+function linuxExecutableName(flavor: SynaraPackagedDesktopFlavor | undefined): string {
+  if (flavor === "remote") return "synara-remote";
+  if (flavor === "zh-cn") return "synara-zh-cn";
+  return "synara";
+}
+
+function windowsInstallerGuid(flavor: SynaraPackagedDesktopFlavor | undefined): string {
+  if (flavor === "remote") return REMOTE_WINDOWS_INSTALLER_GUID;
+  if (flavor === "beta") return SYNARA_BETA_WINDOWS_INSTALLER_GUID;
+  if (flavor === "zh-cn") return SYNARA_ZH_CN_WINDOWS_INSTALLER_GUID;
+  return WINDOWS_INSTALLER_GUID;
 }
 
 export function validateDesktopNativeBuildHost(input: DesktopNativeBuildHostInput): string | null {
@@ -220,6 +292,13 @@ export function createDesktopPlatformBuildConfig(
           from: MAC_ICON_ASSETS_CAR_STAGE_PATH,
           to: MAC_ICON_ASSETS_CAR_BUNDLE_PATH,
         },
+        ...UI_LOCALES.map((locale) => {
+          const directory = `${locale === "zh-CN" ? "zh-Hans" : locale}.lproj`;
+          return {
+            from: `apps/desktop/resources/localizations/${directory}`,
+            to: `Resources/${directory}`,
+          };
+        }),
       ],
       mac,
     };
@@ -242,12 +321,12 @@ export function createDesktopPlatformBuildConfig(
       ],
       linux: {
         target: [input.target],
-        executableName: input.flavor === "remote" ? "synara-remote" : "synara",
+        executableName: linuxExecutableName(input.flavor),
         icon: "icon.png",
         category: "Development",
         desktop: {
           entry: {
-            StartupWMClass: input.flavor === "remote" ? "synara-remote" : "synara",
+            StartupWMClass: linuxExecutableName(input.flavor),
           },
         },
       },
@@ -259,12 +338,7 @@ export function createDesktopPlatformBuildConfig(
     // Keep the Windows product registration stable while the public app ID changes.
     // This lets NSIS updates replace the existing installation and own its uninstaller.
     nsis: {
-      guid:
-        input.flavor === "remote"
-          ? REMOTE_WINDOWS_INSTALLER_GUID
-          : input.flavor === "beta"
-            ? SYNARA_BETA_WINDOWS_INSTALLER_GUID
-            : WINDOWS_INSTALLER_GUID,
+      guid: windowsInstallerGuid(input.flavor),
     },
     win: {
       target: [input.target],

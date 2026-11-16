@@ -6,7 +6,16 @@ import {
 } from "./desktopUpdateControl";
 import { registerRemoteResourceBroker, REMOTE_RESOURCE_SCHEME } from "./remoteResourceBroker";
 import { showDiagnosticStartupDialog } from "./startupDiagnosticDialog";
-import { t } from "./i18n";
+import {
+  initializeDesktopI18n,
+  setDesktopLanguagePreference,
+  t,
+  translateNativeMenuRoles,
+} from "./i18n";
+import {
+  applyDesktopLanguagePreference,
+  readDesktopLanguagePreference,
+} from "./desktopPreferences";
 import { BackendIssueDetector } from "./backendIssueDetector";
 import { attachAppSubframeNavigationGuard } from "./subframeNavigationGuard";
 import { CuaDriverHost, sweepOrphanedCuaDriversInBackground } from "./cuaDriverHost";
@@ -95,6 +104,7 @@ import {
   SYNARA_DESKTOP_SMOKE_USER_DATA_ENV,
   SYNARA_DESKTOP_BUNDLE_ID_ENV,
   SYNARA_SOURCE_DESKTOP_BUILD_MARKER,
+  SYNARA_ZH_CN_HOME_ENV,
   canOverrideDesktopSmokeUserData,
   resolveSynaraDesktopRuntimeFlavor,
   synaraDesktopIdentity,
@@ -434,7 +444,9 @@ const BASE_DIR =
     ? process.env.SYNARA_REMOTE_HOME?.trim()
     : desktopFlavor === "beta"
       ? process.env.SYNARA_BETA_HOME?.trim()
-      : process.env.SYNARA_HOME?.trim()) ||
+      : desktopFlavor === "zh-cn"
+        ? process.env[SYNARA_ZH_CN_HOME_ENV]?.trim()
+        : process.env.SYNARA_HOME?.trim()) ||
   Path.join(OS.homedir(), desktopIdentity.defaultHomeDirectoryName);
 const STATE_DIR = Path.join(BASE_DIR, "userdata");
 const DESKTOP_WINDOW_STATE_PATH = Path.join(STATE_DIR, "desktop-window-state.json");
@@ -479,12 +491,21 @@ const DESKTOP_BROWSER_HOST_CAPABILITY_FD = 3;
 // for the same lock even when they use the same Electron executable.
 const userDataPath = resolveUserDataPath();
 app.setPath("userData", userDataPath);
+// Match the renderer storage profile, including isolated source-build profiles.
+const DESKTOP_LANGUAGE_PREFERENCE_PATH = Path.join(userDataPath, "desktop-language.json");
+initializeDesktopI18n(readDesktopLanguagePreference(DESKTOP_LANGUAGE_PREFERENCE_PATH), () =>
+  app.isReady()
+    ? app.getPreferredSystemLanguages()
+    : [new Intl.DateTimeFormat().resolvedOptions().locale],
+);
 const hasSingleInstanceLock = app.requestSingleInstanceLock();
 
 // Remote shares usage and diagnostics by default; Settings turns both off.
 // Stable stays opt-in for product events and never runs diagnostics.
 const productAnalytics = new ProductAnalytics({
   homeDir: BASE_DIR,
+  // Official ingest only knows stable/beta/remote. The custom zh-CN installer
+  // stays opt-in like Stable and must not invent a new channel or share Beta.
   channel: desktopFlavor === "beta" ? "beta" : desktopFlavor === "remote" ? "remote" : "stable",
   appVersion: app.getVersion(),
   platform: process.platform,
@@ -2122,7 +2143,9 @@ function configureApplicationMenu(): void {
     },
   );
 
-  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+  const applicationMenu = Menu.buildFromTemplate(template);
+  translateNativeMenuRoles(applicationMenu, APP_DISPLAY_NAME);
+  Menu.setApplicationMenu(applicationMenu);
 }
 
 function resolveResourcePath(fileName: string): string | null {
@@ -5485,6 +5508,25 @@ function registerIpcHandlers(): void {
   });
 
   ipcMain.removeHandler(IPC.setTheme);
+  ipcMain.removeAllListeners(IPC.getSystemLanguages);
+  ipcMain.on(IPC.getSystemLanguages, (event: IpcMainEvent) => {
+    event.returnValue =
+      event.sender === mainWindow?.webContents && event.senderFrame === event.sender.mainFrame
+        ? app.getPreferredSystemLanguages()
+        : [];
+  });
+  ipcMain.removeHandler(IPC.setLanguagePreference);
+  ipcMain.handle(IPC.setLanguagePreference, (event, rawPreference: unknown) => {
+    applyDesktopLanguagePreference(rawPreference, {
+      isTrustedSender:
+        event.sender === mainWindow?.webContents && event.senderFrame === event.sender.mainFrame,
+      preferencePath: DESKTOP_LANGUAGE_PREFERENCE_PATH,
+      onPreference: (language) => {
+        setDesktopLanguagePreference(language);
+        if (app.isReady()) configureApplicationMenu();
+      },
+    });
+  });
   ipcMain.handle(IPC.setTheme, async (_event, rawTheme: unknown) => {
     const theme = getSafeTheme(rawTheme);
     if (!theme) {
@@ -6172,7 +6214,9 @@ function createWindow(): BrowserWindow {
       { role: "selectAll", enabled: params.editFlags.canSelectAll },
     );
 
-    Menu.buildFromTemplate(menuTemplate).popup({ window });
+    const menu = Menu.buildFromTemplate(menuTemplate);
+    translateNativeMenuRoles(menu, APP_DISPLAY_NAME);
+    menu.popup({ window });
   });
 
   window.webContents.setWindowOpenHandler(({ url }) => {

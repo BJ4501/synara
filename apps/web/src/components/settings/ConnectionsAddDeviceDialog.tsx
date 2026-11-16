@@ -7,6 +7,7 @@
 
 import { useState } from "react";
 
+import { useTranslation } from "~/i18n";
 import { remoteDeviceKind, type RemoteHostState } from "~/lib/hosts/remoteAccess";
 import { ClockIcon, RefreshCwIcon } from "~/lib/icons";
 import { SegmentedPicker } from "../SegmentedPicker";
@@ -89,6 +90,7 @@ function AddDeviceDialogContent({
   onClose: () => void;
   computerNoun: string;
 }) {
+  const { t } = useTranslation();
   const [tab, setTab] = useState<DeviceTab>("phone");
   const {
     view,
@@ -127,43 +129,48 @@ function AddDeviceDialogContent({
         {view === "approval" ? (
           <>
             <DialogTitle>
-              {pending.length === 1 ? "Approve this device?" : "Approve these devices?"}
+              {pending.length === 1
+                ? t("settings:conn_approveThisDevice")
+                : t("settings:conn_approveTheseDevices")}
             </DialogTitle>
             <DialogDescription>
               {pending.length === 1
-                ? "A device used your pairing code. Approve it only if you recognize it and its fingerprint matches."
-                : "Devices used your pairing codes. Approve each only if you recognize it and its fingerprint matches."}
+                ? t("settings:conn_deviceUsedCode")
+                : t("settings:conn_devicesUsedCodes")}
             </DialogDescription>
           </>
         ) : view === "joined" ? (
           <>
             <DialogTitle>
-              {joinedNames} {joined.length === 1 ? "is" : "are"} connected
+              {t("settings:conn_isAreConnected", { value0: joinedNames, value1: "" }).replace(
+                / {2,}/g,
+                " ",
+              )}
             </DialogTitle>
             <DialogDescription>
-              {joined.length === 1 ? "It" : "They"} can now control this {computerNoun}.
+              {t("settings:conn_nowControlThis", { value0: joinedNames, value1: computerNoun })}
             </DialogDescription>
           </>
         ) : view === "code" ? (
           <>
-            <DialogTitle>Connect a device to this {computerNoun}</DialogTitle>
+            <DialogTitle>
+              {t("settings:conn_connectDeviceToThis", { value0: computerNoun })}
+            </DialogTitle>
             <DialogDescription>
               {email ? (
                 <>
-                  Use the same Synara account on both:{" "}
+                  {t("settings:conn_useSameAccountBoth")}{" "}
                   <span className="font-medium break-all text-foreground">{email}</span>
                 </>
               ) : (
-                "Use the same Synara account on both devices."
+                t("settings:conn_useSameAccountBothDevices")
               )}
             </DialogDescription>
           </>
         ) : (
           <>
-            <DialogTitle>No requests waiting</DialogTitle>
-            <DialogDescription>
-              Devices that use your code and still need your approval appear here.
-            </DialogDescription>
+            <DialogTitle>{t("settings:conn_noRequestsWaiting")}</DialogTitle>
+            <DialogDescription>{t("settings:conn_devicesNeedingApproval")}</DialogDescription>
           </>
         )}
       </DialogHeader>
@@ -201,7 +208,7 @@ function AddDeviceDialogContent({
                     aria-hidden={remaining ? undefined : true}
                   >
                     {tab === "phone" && qrLink ? (
-                      <PairingQrCode value={qrLink} label="Scan to connect to this computer" />
+                      <PairingQrCode value={qrLink} label={t("settings:conn_scanToConnect")} />
                     ) : (
                       <PairingCode code={invitation.code} />
                     )}
@@ -217,28 +224,28 @@ function AddDeviceDialogContent({
                       disabled={busy}
                       onClick={() => void newCode()}
                     >
-                      Try again
+                      {t("common:actionTryAgain")}
                     </Button>
                   </div>
                 ) : busy || !codeRequested ? (
                   <p className="flex items-center gap-2 text-ui text-muted-foreground">
                     <Spinner className="size-4" aria-hidden />
-                    Creating a code…
+                    {t("settings:conn_creatingACode")}
                   </p>
                 ) : (
                   <Button shape="capsule" variant="subtle" onClick={() => void newCode()}>
-                    New code
+                    {t("settings:conn_newCode")}
                   </Button>
                 )}
                 {invitation && !remaining ? (
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 text-center">
                     <p className="text-ui font-semibold text-foreground">
-                      {used ? "This code was used" : "This code expired"}
+                      {used ? t("settings:conn_codeWasUsed") : t("settings:conn_codeExpired")}
                     </p>
                     <p className="mb-2 text-ui-sm text-muted-foreground">
                       {used
-                        ? "Create a new code to connect another device."
-                        : "Create a new code to try again."}
+                        ? t("settings:conn_createCodeAnotherDevice")
+                        : t("settings:conn_createCodeTryAgain")}
                     </p>
                     <Button
                       shape="capsule"
@@ -246,7 +253,7 @@ function AddDeviceDialogContent({
                       disabled={busy}
                       onClick={() => void newCode()}
                     >
-                      New code
+                      {t("settings:conn_newCode")}
                     </Button>
                   </div>
                 ) : null}
@@ -255,15 +262,19 @@ function AddDeviceDialogContent({
                 <div className="mt-2 flex items-center justify-between">
                   <span className="flex items-center gap-1.5 text-ui-sm text-muted-foreground tabular-nums">
                     <ClockIcon className="size-3.5" aria-hidden />
-                    Expires in {remaining}
+                    {t("settings:conn_expiresIn", { value0: remaining })}
                   </span>
                   <span className="flex items-center gap-0.5 text-muted-foreground">
-                    <CopyTextButton text={invitation.code} label="code" iconOnly />
+                    <CopyTextButton
+                      text={invitation.code}
+                      label={t("settings:conn_codeAria")}
+                      iconOnly
+                    />
                     <Button
                       size="icon-xs"
                       variant="ghost"
-                      aria-label="New code"
-                      title="New code"
+                      aria-label={t("settings:conn_newCode")}
+                      title={t("settings:conn_newCode")}
                       disabled={busy}
                       onClick={() => void newCode()}
                     >
@@ -275,26 +286,22 @@ function AddDeviceDialogContent({
             </div>
             {invitation && remaining && tab === "phone" ? (
               <p className={HELP_TEXT_CLASS_NAME}>
-                {qrLink ? "Can’t scan? Enter " : "Enter "}
-                <span className="font-mono font-medium text-foreground">
-                  {invitation.code}
-                </span> in
-                Synara on your phone or iPad.
+                {t("settings:conn_cantScanEnter", { value0: invitation.code })}{" "}
+                {t("settings:conn_inSynaraOnPhone")}
               </p>
             ) : null}
             {invitation && remaining && tab === "computer" ? (
               <>
                 <p className={HELP_TEXT_CLASS_NAME}>
-                  On your other computer, open{" "}
+                  {t("settings:conn_onOtherComputerOpen")}{" "}
                   <span className="font-medium text-foreground">
-                    Settings › Connections › Control other devices
+                    {t("settings:conn_settingsConnectionsControlOther")}
                   </span>
-                  , click <span className="font-medium text-foreground">Add</span> and enter this
-                  code.
+                  {t("settings:conn_clickAddAndEnter")}
                 </p>
                 <div className="space-y-1.5 rounded-[14px] border border-border py-2.5 ps-3.5 pe-2">
                   <p className="text-ui-xs text-muted-foreground">
-                    Then check it shows this {computerNoun}’s fingerprint
+                    {t("settings:conn_thenCheckFingerprint", { value0: computerNoun })}
                   </p>
                   <RootFingerprint value={invitation.rootFingerprint} className="text-foreground" />
                 </div>
@@ -316,7 +323,7 @@ function AddDeviceDialogContent({
             className="w-full"
             onClick={onClose}
           >
-            Done
+            {t("common:actionDone")}
           </Button>
         ) : null}
       </DialogPanel>

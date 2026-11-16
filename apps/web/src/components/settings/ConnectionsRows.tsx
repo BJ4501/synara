@@ -14,6 +14,7 @@ import type {
   RemoteTrustedDevice,
 } from "@synara/contracts";
 
+import { useTranslation } from "~/i18n";
 import { canManageHost, hostPlatformLabel } from "~/lib/hosts/api";
 import {
   reachabilityLabel,
@@ -52,6 +53,7 @@ export function RemoteDeviceIcon({ label }: { label: string }) {
 
 /** Grouped identity for comparison; copies the original fingerprint without display spacing. */
 export function RootFingerprint({ value, className }: { value: string; className?: string }) {
+  const { t } = useTranslation();
   return (
     <div className={cn("flex items-center gap-2", className)}>
       <p className="grid min-w-0 flex-1 grid-cols-4 gap-x-2 gap-y-1 font-mono text-ui-xs">
@@ -59,7 +61,7 @@ export function RootFingerprint({ value, className }: { value: string; className
           <span key={group.offset}>{group.text}</span>
         ))}
       </p>
-      <CopyTextButton text={value} label="fingerprint" iconOnly />
+      <CopyTextButton text={value} label={t("settings:conn_fingerprint")} iconOnly />
     </div>
   );
 }
@@ -74,6 +76,7 @@ export function TrustedDeviceRow({
   busy: boolean;
   onRevoke: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <SettingsListRow
       leading={<RemoteDeviceIcon label={device.label} />}
@@ -81,7 +84,7 @@ export function TrustedDeviceRow({
       description={trustedDeviceActivityLabel(device)}
       actions={
         <Button size="xs" shape="capsule" variant="subtle" disabled={busy} onClick={onRevoke}>
-          Revoke access
+          {t("settings:conn_revokeAccess")}
         </Button>
       }
     />
@@ -137,6 +140,7 @@ export function HostRow({
   onDeactivate?: () => void;
   onForget?: () => void;
 }) {
+  const { t } = useTranslation();
   const connection = connectionProp ?? { kind: "disconnected", busy: false };
   const owned = canManageHost(host);
   const status = hostStatusLabel(host, connection, reachability);
@@ -176,11 +180,11 @@ export function HostRow({
           {connection.kind === "connected" ? (
             connection.active ? (
               <Button size="xs" shape="capsule" variant="subtle" onClick={onDeactivate}>
-                Back to this computer
+                {t("settings:conn_backToThisComputer")}
               </Button>
             ) : (
               <Button size="xs" shape="capsule" variant="subtle" onClick={onActivate}>
-                Open
+                {t("common:actionOpen")}
               </Button>
             )
           ) : (
@@ -191,7 +195,7 @@ export function HostRow({
               disabled={!host.linked || connection.busy}
               onClick={onConnect}
             >
-              {connection.busy ? "Connecting…" : "Connect"}
+              {connection.busy ? t("common:connectingEllipsis") : t("common:actionConnect")}
             </Button>
           )}
           <Menu>
@@ -200,7 +204,7 @@ export function HostRow({
                 <Button
                   size="icon-xs"
                   variant="ghost"
-                  aria-label={`More actions for ${host.name}`}
+                  aria-label={t("settings:conn_moreActionsFor", { value0: host.name })}
                 />
               }
             >
@@ -209,12 +213,14 @@ export function HostRow({
             <ComposerPickerMenuPopup align="end" side="bottom" className="min-w-52">
               {onProbe ? (
                 <MenuItem disabled={reachability.state === "probing"} onClick={onProbe}>
-                  {reachability.state === "probing" ? "Checking…" : "Check availability"}
+                  {reachability.state === "probing"
+                    ? t("common:checkingEllipsis")
+                    : t("settings:conn_checkAvailability")}
                 </MenuItem>
               ) : null}
               {connection.kind === "connected" ? (
                 <MenuItem disabled={connection.busy} onClick={onDisconnect}>
-                  Disconnect
+                  {t("common:actionDisconnect")}
                 </MenuItem>
               ) : null}
               {owned ? (
@@ -224,14 +230,14 @@ export function HostRow({
                   disabled={busy}
                   onCheckedChange={(checked) => onToggleDiscoverable(Boolean(checked))}
                 >
-                  Share with workspace
+                  {t("settings:conn_shareWithWorkspace")}
                 </MenuCheckboxItem>
               ) : null}
               {onForget ? (
                 <>
                   <MenuSeparator />
                   <MenuItem variant="destructive" onClick={onForget}>
-                    Forget pairing
+                    {t("settings:conn_forgetPairing")}
                   </MenuItem>
                 </>
               ) : null}
@@ -261,6 +267,7 @@ export function DeviceRow({
   onRevoke: () => void;
   onRevokeAccountSessions?: () => void;
 }) {
+  const { t } = useTranslation();
   const revoked = device.revokedAt !== null;
   return (
     <SettingsListRow
@@ -269,13 +276,15 @@ export function DeviceRow({
       title={device.displayName}
       description={
         <span className="flex flex-col gap-0.5">
-          <span>{revoked ? "Device key revoked" : usedLabel(device.lastUsedAt)}</span>
+          <span>
+            {revoked ? t("settings:conn_deviceKeyRevoked") : usedLabel(device.lastUsedAt)}
+          </span>
           {device.revocationDeliveries?.map((delivery) => (
             <span key={delivery.hostId} className="text-ui-sm">
               {delivery.hostName}:{" "}
               {delivery.confirmedAt
-                ? "revocation confirmed"
-                : "delivery pending; existing sessions expire normally"}
+                ? t("settings:conn_revocationConfirmed")
+                : t("settings:conn_deliveryPending")}
             </span>
           ))}
         </span>
@@ -290,7 +299,7 @@ export function DeviceRow({
               disabled={busy}
               onClick={onRevokeAccountSessions}
             >
-              Sign out
+              {t("settings:signOut")}
             </Button>
           ) : null}
           {!revoked ? (
@@ -301,7 +310,7 @@ export function DeviceRow({
               disabled={busy}
               onClick={onRevoke}
             >
-              Revoke key
+              {t("settings:conn_revokeKey")}
             </Button>
           ) : null}
         </>
@@ -337,6 +346,7 @@ export function SessionRow({
   busy: boolean;
   onEnd: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <SettingsListRow
       leading={<RemoteDeviceIcon label={deviceLabel} />}
@@ -355,7 +365,7 @@ export function SessionRow({
           disabled={busy}
           onClick={onEnd}
         >
-          End session
+          {t("settings:conn_endSession")}
         </Button>
       }
     />

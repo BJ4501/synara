@@ -235,6 +235,12 @@ export const GENERATED_SETTINGS_SEARCH_ROWS: readonly GeneratedSettingsSearchRow
     description: "settings:useMacOSStyleAntialiasingForLighterCrisperTextRendering",
   },
   {
+    target: "setting-language",
+    section: "appearance",
+    title: "common:general_languageAria",
+    description: "settings:chooseTheLanguageUsedByTheInterfaceSystemFollows",
+  },
+  {
     target: "setting-follow-up-behavior",
     section: "behavior",
     title: "settings:followUpBehavior",

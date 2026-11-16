@@ -6,6 +6,7 @@
 // Exports: ChartLegend, ChartTooltip, DailyBarChart, ProviderLineChart, RhythmChart
 
 import { type ReactNode, useState } from "react";
+import { getFormatLocale, t } from "~/i18n";
 
 import { useContainerSize } from "~/hooks/useContainerSize";
 import { cn } from "~/lib/utils";
@@ -46,11 +47,15 @@ function amountOf(
 }
 
 function dayLabel(date: Date): string {
-  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  return date.toLocaleDateString(getFormatLocale(), { month: "short", day: "numeric" });
 }
 
 function longDayLabel(date: Date): string {
-  return date.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+  return date.toLocaleDateString(getFormatLocale(), {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
 }
 
 /** Indexes of the days that get an x-axis label: first, last, and a few between. */
@@ -133,7 +138,11 @@ export function ChartLegend(props: {
             key={provider}
             type="button"
             aria-pressed={shown}
-            title={shown ? `Hide ${providerLabel(provider)}` : `Show ${providerLabel(provider)}`}
+            title={
+              shown
+                ? `${t("settings:usage_hide")} ${providerLabel(provider)}`
+                : `${t("settings:usage_show")} ${providerLabel(provider)}`
+            }
             onClick={() => props.onToggle(provider)}
             className={cn(
               "flex h-6 items-center gap-1.5 rounded-md px-1.5 text-ui-sm transition-colors hover:bg-foreground/[0.05] focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none",

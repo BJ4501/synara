@@ -222,7 +222,7 @@ export function ThreadHoverCardContent({
           {hostName ? (
             <span className={META_ROW_CLASS_NAME}>
               <GlobeIcon className={REMOTE_GLOBE_CLASS_NAME} aria-hidden />
-              <span className="sr-only">Computer:</span>
+              <span className="sr-only">{t("common:computerColon")}</span>
               <span className="min-w-0 truncate">{hostName}</span>
             </span>
           ) : null}

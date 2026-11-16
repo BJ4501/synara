@@ -5,24 +5,17 @@
 // Exports: normalizeCorsOrigin, isTrustedAppOrigin,
 //          shouldRejectUntrustedRequestOrigin
 
-import {
-  SYNARA_BETA_DESKTOP_ORIGIN,
-  SYNARA_CANARY_DESKTOP_ORIGIN,
-  SYNARA_CUA_DESKTOP_ORIGIN,
-  SYNARA_DESKTOP_ORIGIN,
-  SYNARA_REMOTE_DESKTOP_ORIGIN,
-} from "@synara/shared/desktopIdentity";
+import { synaraPackagedDesktopAppOrigins } from "@synara/shared/desktopIdentity";
 
 import type { ServerConfigShape } from "./config";
 import { isLoopbackHost, isWildcardHost } from "./startupAccess";
 
-export const DESKTOP_APP_CORS_ORIGINS: ReadonlySet<string> = new Set([
-  SYNARA_DESKTOP_ORIGIN,
-  SYNARA_CANARY_DESKTOP_ORIGIN,
-  SYNARA_CUA_DESKTOP_ORIGIN,
-  SYNARA_BETA_DESKTOP_ORIGIN,
-  SYNARA_REMOTE_DESKTOP_ORIGIN,
-]);
+// Custom desktop schemes (`synara://app`, `synara-zh-cn://app`, …) have opaque
+// `URL.origin` (`"null"`). The WS/CORS gate therefore matches the raw Origin
+// header against this set before falling through to URL parsing.
+export const DESKTOP_APP_CORS_ORIGINS: ReadonlySet<string> = new Set(
+  synaraPackagedDesktopAppOrigins(),
+);
 
 export function normalizeCorsOrigin(rawOrigin: string | ReadonlyArray<string> | undefined) {
   if (Array.isArray(rawOrigin) && rawOrigin.length !== 1) {

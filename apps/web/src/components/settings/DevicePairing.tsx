@@ -9,6 +9,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { useAccount } from "~/hooks/useAccount";
+import { useTranslation } from "~/i18n";
 import {
   activeTrustedDevices,
   callRemoteAccess,
@@ -179,6 +180,7 @@ export function PendingDeviceApprovalCard({
   onApprove: () => void;
   onReject: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className={`${DEVICE_PAIRING_CARD_CLASS_NAME} space-y-3.5 p-4`}>
       <div className="flex items-center gap-3">
@@ -192,11 +194,15 @@ export function PendingDeviceApprovalCard({
           >
             {entry.pendingDevice.label}
           </p>
-          <p className="text-ui-sm text-muted-foreground">Wants to control this {computerNoun}</p>
+          <p className="text-ui-sm text-muted-foreground">
+            {t("settings:conn_wantsToControlThis", { value0: computerNoun })}
+          </p>
         </div>
       </div>
       <div className="space-y-1.5 border-t border-border pt-3">
-        <p className="text-ui-xs text-muted-foreground">The device should show this fingerprint</p>
+        <p className="text-ui-xs text-muted-foreground">
+          {t("settings:conn_deviceShouldShowFingerprint")}
+        </p>
         <code className="block font-mono text-ui-xs break-all text-foreground">
           {entry.pendingDevice.deviceJkt}
         </code>
@@ -209,10 +215,10 @@ export function PendingDeviceApprovalCard({
           disabled={busy}
           onClick={onReject}
         >
-          Reject
+          {t("common:actionReject")}
         </Button>
         <Button shape="capsule" className="flex-1" disabled={busy} onClick={onApprove}>
-          Approve
+          {t("common:actionApprove")}
         </Button>
       </div>
     </div>
@@ -220,10 +226,11 @@ export function PendingDeviceApprovalCard({
 }
 
 export function PairingCode({ code }: { code: string }) {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-col items-center gap-2.5">
       <span className="text-ui-xs font-medium tracking-[0.08em] text-muted-foreground uppercase">
-        Pairing code
+        {t("settings:conn_pairingCode")}
       </span>
       <span className="font-mono text-4xl font-medium tracking-[0.12em] text-foreground">
         {code}

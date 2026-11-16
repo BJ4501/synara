@@ -212,7 +212,10 @@ function ConnectedRow(props: {
   const detailsId = useId();
   const needsAuth = connector.status === "needs-auth";
   return (
-    <section className={MCP_CONNECTOR_CARD_CLASS_NAME} aria-label={`${connector.name} connector`}>
+    <section
+      className={MCP_CONNECTOR_CARD_CLASS_NAME}
+      aria-label={`${connector.name} ${t("settings:mcp_connector")}`}
+    >
       <McpConnectorCardHeader
         connector={connector}
         subtitle={presetDescription(connectorPreset(connector), t)}
@@ -253,9 +256,9 @@ function ConnectedRow(props: {
             className={`size-1.5 shrink-0 rounded-full ${needsAuth ? "bg-destructive" : connector.status === "unreachable" ? "bg-muted-foreground" : "bg-success"}`}
           />
           {needsAuth
-            ? "Needs sign-in"
+            ? t("settings:mcp_needsSignIn")
             : connector.status === "unreachable"
-              ? "Not running"
+              ? t("settings:mcp_notRunning")
               : t("chat:connected")}
         </span>
         {needsAuth ? (
@@ -271,7 +274,7 @@ function ConnectedRow(props: {
           aria-controls={detailsId}
           onClick={() => setDetailsOpen((open) => !open)}
         >
-          Connection details
+          {t("settings:mcp_connectionDetails")}
           <DisclosureChevron open={detailsOpen} className="size-3.5" />
         </Button>
       </div>
@@ -323,10 +326,7 @@ function AddCustomConnectorDialog(props: {
       <DialogPopup className="max-w-md">
         <DialogHeader>
           <DialogTitle>{t("settings:addCustomConnector")}</DialogTitle>
-          <DialogDescription>
-            A public HTTPS or loopback HTTP MCP server. Synara signs in with OAuth when the server
-            asks for it.
-          </DialogDescription>
+          <DialogDescription>{t("settings:mcp_publicHttpsHelp")}</DialogDescription>
         </DialogHeader>
         <DialogPanel>
           <form id={formId} className="space-y-1.5" onSubmit={submit} noValidate>
@@ -480,7 +480,7 @@ export function McpConnectorsSettingsPanel(props: { active: boolean }) {
           className="shrink-0"
           onClick={() => setLocalOpen(true)}
         >
-          Add local server
+          {t("settings:mcp_addLocalServer")}
         </Button>
       </div>
 
@@ -493,7 +493,7 @@ export function McpConnectorsSettingsPanel(props: { active: boolean }) {
       ) : null}
 
       {visibleConnectors.length > 0 ? (
-        <ConnectorShelf title="Your connectors" cards>
+        <ConnectorShelf title={t("settings:mcp_yourConnectors")} cards>
           {visibleConnectors.map((connector) => (
             <ConnectedRow
               key={connector.connectorId}

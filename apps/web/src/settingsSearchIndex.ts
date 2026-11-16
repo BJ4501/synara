@@ -113,6 +113,7 @@ export const ROW_EXTRA_KEYWORDS: Readonly<Record<string, readonly string[]>> = {
     "settings:chooseTheProviderUsedForNewChatsAgentCodex",
     "default provider default agent default account",
   ],
+  "setting-language": ["settings:languageSearchKeywords"],
   "setting-new-threads": ["settings:pickTheDefaultWorkspaceModeForNewlyCreatedDraft2"],
   "setting-delete-worktree-on-archive": ["settings:afterArchiveSUndoPeriodRemoveACleanWorktree2"],
   "setting-move-sent-messages-to-top": ["settings:moveEachSentMessageToTheTopOfThe2"],
@@ -263,7 +264,7 @@ export const SETTINGS_SEARCH_ENTRIES: readonly SettingsSearchEntry[] = [
   {
     id: "privacy:share-product-analytics",
     section: "privacy",
-    title: "Share product analytics",
+    title: "settings:conn_shareProductAnalytics",
     keywords: ["Privacy consent anonymous statistics collection tracking performance Cloudflare"],
   },
   {
@@ -358,7 +359,7 @@ export const SETTINGS_SEARCH_ENTRIES: readonly SettingsSearchEntry[] = [
   {
     id: "connections:this-computer",
     section: "connections",
-    title: "Control this computer",
+    title: "settings:conn_controlThisComputer",
     keywords: [
       "Devices that can control this Mac or computer. allow connections add iphone ipad qr code pairing approve revoke access trusted devices",
     ],
@@ -367,7 +368,7 @@ export const SETTINGS_SEARCH_ENTRIES: readonly SettingsSearchEntry[] = [
   {
     id: "connections:other-computers",
     section: "connections",
-    title: "Control other devices",
+    title: "settings:conn_controlOtherDevices",
     keywords: [
       "Computers you can control from this one. host server laptop connect open remote relay back to this computer disconnect forget pairing code share workspace discoverable",
     ],
@@ -385,7 +386,7 @@ export const SETTINGS_SEARCH_ENTRIES: readonly SettingsSearchEntry[] = [
   {
     id: "connections:advanced",
     section: "connections",
-    title: "Account devices and sessions",
+    title: "settings:conn_accountDevicesAndSessions",
     keywords: [
       "Advanced: devices signed in to your account, active sessions, and unlinking this machine. revoke sign out lost stolen last used end session unlink",
     ],

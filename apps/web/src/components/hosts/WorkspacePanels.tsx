@@ -90,6 +90,7 @@ import { useWorkspacePathsStore } from "../../workspacePathsStore";
 import { useTerminalStateStore } from "../../terminalStateStore";
 import { useSidebar } from "../ui/sidebar";
 import { modelPickerShortcutRowIndex } from "../chat/ComposerModelPicker.logic";
+import { useTranslation } from "~/i18n";
 
 function selection(
   href = appHistory.location.href,
@@ -113,6 +114,7 @@ function WorkspacePanel({
   path: string;
   newLocalChat: () => Promise<string>;
 }) {
+  const { t } = useTranslation();
   const environmentId = session.host.executionScope.environmentId;
   const host = session.host;
   const keybindingsQuery = useQuery({
@@ -331,11 +333,11 @@ function WorkspacePanel({
     <section
       hidden={!active}
       className={active ? "absolute inset-0 z-10 flex min-h-0 flex-col" : "hidden"}
-      aria-label={`Workspace on ${host.hostName}`}
+      aria-label={t("settings:conn_workspaceOn", { value0: host.hostName })}
     >
       <iframe
         ref={bind}
-        title={`Synara workspace on ${host.hostName}`}
+        title={t("settings:conn_synaraWorkspaceOn", { value0: host.hostName })}
         className="min-h-0 w-full flex-1 border-0"
         allow="clipboard-read; clipboard-write"
         // The bundled app needs its own storage and scripts. This isolates state, not security principals.

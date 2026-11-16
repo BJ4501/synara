@@ -4,8 +4,16 @@
 
 import { describe, expect, it } from "vitest";
 
+import {
+  SYNARA_PACKAGED_DESKTOP_FLAVORS,
+  SYNARA_ZH_CN_DESKTOP_ORIGIN,
+  synaraDesktopIdentity,
+  synaraPackagedDesktopAppOrigins,
+} from "@synara/shared/desktopIdentity";
+
 import type { ServerConfigShape } from "./config";
 import {
+  DESKTOP_APP_CORS_ORIGINS,
   isTrustedAppOrigin,
   normalizeCorsOrigin,
   requiresWebSocketAuthentication,
@@ -63,6 +71,34 @@ describe("trustedOrigins", () => {
         config,
       }),
     ).toBe(true);
+    expect(
+      isTrustedAppOrigin({
+        origin: SYNARA_ZH_CN_DESKTOP_ORIGIN,
+        requestOrigin: "http://127.0.0.1:58090",
+        config,
+      }),
+    ).toBe(true);
+  });
+
+  it("keeps packaged custom-scheme origins on the explicit allowlist because URL.origin is opaque", () => {
+    const origins = synaraPackagedDesktopAppOrigins();
+    expect(origins).toEqual(
+      SYNARA_PACKAGED_DESKTOP_FLAVORS.map((flavor) => synaraDesktopIdentity(flavor).origin),
+    );
+    expect(origins).toContain(SYNARA_ZH_CN_DESKTOP_ORIGIN);
+    expect([...DESKTOP_APP_CORS_ORIGINS].sort()).toEqual([...origins].sort());
+    for (const origin of origins) {
+      expect(new URL(origin).origin).toBe("null");
+      expect(normalizeCorsOrigin(origin)).toBe(origin);
+      expect(normalizeCorsOrigin(`${origin}/`)).toBe(origin);
+      expect(
+        shouldRejectUntrustedRequestOrigin({
+          rawOrigin: origin,
+          requestOrigin: "http://127.0.0.1:58090",
+          config,
+        }),
+      ).toBe(false);
+    }
   });
 
   it("rejects unrelated browser origins but allows non-browser requests without Origin", () => {
@@ -135,16 +171,11 @@ describe("trustedOrigins", () => {
     expect(normalizeCorsOrigin("synara-cua://app/")).toBe("synara-cua://app");
     expect(normalizeCorsOrigin("synara-beta://app/")).toBe("synara-beta://app");
     expect(normalizeCorsOrigin("synara-remote://app/")).toBe("synara-remote://app");
+    expect(normalizeCorsOrigin("synara-zh-cn://app/")).toBe("synara-zh-cn://app");
   });
 
   it("trusts every packaged desktop flavor at the request gate and rejects lookalikes", () => {
-    for (const rawOrigin of [
-      "synara://app",
-      "synara-beta://app",
-      "synara-canary://app",
-      "synara-cua://app",
-      "synara-remote://app",
-    ]) {
+    for (const rawOrigin of synaraPackagedDesktopAppOrigins()) {
       expect(
         shouldRejectUntrustedRequestOrigin({
           rawOrigin,
@@ -165,6 +196,11 @@ describe("trustedOrigins", () => {
       "synara-remote://app:8080",
       "synara-remote://user@app",
       "synara-remotes://app",
+      "synara-zh-cn://app.evil.test",
+      "synara-zh-cn://evil.test",
+      "synara-zh-cn://app:8080",
+      "synara-zh-cn://user@app",
+      "synara-zh-cns://app",
     ]) {
       expect(
         shouldRejectUntrustedRequestOrigin({

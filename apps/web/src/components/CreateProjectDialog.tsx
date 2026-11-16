@@ -489,6 +489,9 @@ export function CreateProjectDialog(props: {
   const showFolderList =
     folders.length > 0 &&
     (!isElectron || pickedPath === trimmedPath || additionalFolders.length > 0);
+  const [addFolderOnBefore, addFolderOnAfter] = t("settings:hosts_addFolderOn", {
+    value0: "\u0001",
+  }).split("\u0001");
 
   return (
     <Dialog open={props.open} onOpenChange={handleOpenChange}>
@@ -529,8 +532,8 @@ export function CreateProjectDialog(props: {
                 <InputGroupInput
                   id={nameInputId}
                   value={name}
-                  aria-label="Project name"
-                  placeholder="Project name"
+                  aria-label={t("settings:hosts_projectName")}
+                  placeholder={t("settings:hosts_projectName")}
                   maxLength={120}
                   disabled={submitting}
                   onChange={(event) => {
@@ -541,7 +544,7 @@ export function CreateProjectDialog(props: {
                 />
               </InputGroup>
               <div className="flex flex-wrap items-center gap-1 text-ui text-muted-foreground">
-                <span>Add a folder on</span>
+                {addFolderOnBefore ? <span>{addFolderOnBefore}</span> : null}
                 <ComputerPicker
                   computers={computers}
                   value={computerId}
@@ -566,6 +569,7 @@ export function CreateProjectDialog(props: {
                       : undefined
                   }
                 />
+                {addFolderOnAfter ? <span>{addFolderOnAfter}</span> : null}
               </div>
               <InputGroup className={PROJECT_DIALOG_FIELD_CONTROL_CLASS_NAME}>
                 <InputGroupInput
@@ -650,7 +654,7 @@ export function CreateProjectDialog(props: {
                     </button>
                     {!selectedComputer?.available ? (
                       <p role="status" className="text-ui-sm text-muted-foreground">
-                        This computer is unavailable. Reconnect or choose another computer.
+                        {t("settings:hosts_computerUnavailableReconnect")}
                       </p>
                     ) : null}
                   </div>

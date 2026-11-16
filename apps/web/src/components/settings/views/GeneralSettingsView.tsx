@@ -27,6 +27,7 @@ export function GeneralSettingsView(binding: AppSettingsBinding) {
   const { t } = useTranslation();
   const keepAwake = useKeepAwakeState();
   const desktopKeepAwake = useDesktopKeepAwake();
+
   return (
     <div className="space-y-6">
       <SettingsSection title="settings:general_newChats">
