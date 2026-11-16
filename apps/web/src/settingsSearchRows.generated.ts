@@ -13,12 +13,6 @@ export interface GeneratedSettingsSearchRow {
 
 export const GENERATED_SETTINGS_SEARCH_ROWS: readonly GeneratedSettingsSearchRow[] = [
   {
-    target: "setting-language",
-    section: "general",
-    title: "common:general_languageAria",
-    description: "settings:chooseTheLanguageUsedByTheInterfaceSystemFollows",
-  },
-  {
     target: "setting-new-threads",
     section: "general",
     title: "settings:general_newThreads",
@@ -239,6 +233,12 @@ export const GENERATED_SETTINGS_SEARCH_ROWS: readonly GeneratedSettingsSearchRow
     section: "appearance",
     title: "settings:changed_fontSmoothing",
     description: "settings:useMacOSStyleAntialiasingForLighterCrisperTextRendering",
+  },
+  {
+    target: "setting-language",
+    section: "appearance",
+    title: "common:general_languageAria",
+    description: "settings:chooseTheLanguageUsedByTheInterfaceSystemFollows",
   },
   {
     target: "setting-follow-up-behavior",

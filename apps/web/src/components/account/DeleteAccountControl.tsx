@@ -64,15 +64,11 @@ export function DeleteAccountControl() {
       >
         <AlertDialogPopup>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete your Synara account?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This removes your cloud profile, synced usage, saved Inbox and managed connections.
-              Chats stored on your computers remain. Access is disabled immediately and cloud
-              erasure continues in the background. This cannot be undone.
-            </AlertDialogDescription>
+            <AlertDialogTitle>{t("common:account_deleteTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("common:account_deleteBody")}</AlertDialogDescription>
           </AlertDialogHeader>
           <label className="flex flex-col gap-2 text-ui-sm">
-            Enter {me.email} to confirm
+            {t("common:account_enterEmailToConfirm", { value0: me.email })}
             <Input
               type="email"
               autoComplete="off"
@@ -82,7 +78,7 @@ export function DeleteAccountControl() {
           </label>
           {error ? (
             <p role="alert" className="text-ui-sm text-destructive">
-              Could not confirm deletion. Try again; if signed out, sign in to check your account.
+              {t("common:account_deleteConfirmFailed")}
             </p>
           ) : null}
           <AlertDialogFooter>
@@ -90,7 +86,7 @@ export function DeleteAccountControl() {
               render={<Button variant="outline" size="sm" />}
               disabled={account.deleteAccount.isPending}
             >
-              Cancel
+              {t("common:form_cancel")}
             </AlertDialogClose>
             <Button
               variant="destructive"
@@ -113,7 +109,9 @@ export function DeleteAccountControl() {
                   .catch(() => setError(true));
               }}
             >
-              {account.deleteAccount.isPending ? "Deleting…" : "Delete account"}
+              {account.deleteAccount.isPending
+                ? t("common:account_deleting")
+                : t("settings:profile_deleteAccount")}
             </Button>
           </AlertDialogFooter>
         </AlertDialogPopup>

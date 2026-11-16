@@ -74,6 +74,7 @@ describe("release macOS icon catalog identity", () => {
     const key = (flavor: (typeof MAC_ICON_FLAVORS)[number]) =>
       macIconCatalogKey(collectMacIconCatalogInputs(repoRoot, flavor));
     expect(key("remote")).toBe(key("production"));
+    expect(key("zh-cn")).toBe(key("production"));
     expect(key("beta")).not.toBe(key("production"));
     expect(key("production")).toMatch(/^mac-icon-v1-[a-f0-9]{64}$/);
   });

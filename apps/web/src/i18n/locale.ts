@@ -6,6 +6,7 @@ import {
   normalizeLanguagePreference,
   resolveUiLocale,
   resolveUiLanguagePreference,
+  resolveFormatLocale as resolveSharedFormatLocale,
 } from "@synara/shared/uiLocale";
 import type { UiLanguagePreference as LanguagePreference } from "@synara/contracts";
 
@@ -30,6 +31,10 @@ export function resolveLanguagePreference(preference: LanguagePreference): Langu
 
 export function resolveLocale(preference: LanguagePreference, languages: readonly string[]) {
   return resolveUiLocale(preference, languages);
+}
+
+export function resolveFormatLocale(preference: LanguagePreference, languages: readonly string[]) {
+  return resolveSharedFormatLocale(preference, languages);
 }
 
 export function readLanguagePreference(storage?: Pick<Storage, "getItem">): LanguagePreference {

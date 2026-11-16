@@ -9,6 +9,7 @@ import {
   SYNARA_DEVELOPMENT_BUNDLE_ID,
   SYNARA_PRODUCTION_BUNDLE_ID,
   SYNARA_REMOTE_BUNDLE_ID,
+  SYNARA_ZH_CN_BUNDLE_ID,
   type SynaraDesktopFlavor,
 } from "@synara/shared/desktopIdentity";
 
@@ -89,6 +90,8 @@ export function desktopFlavorFromBundleId(
       return "remote";
     case SYNARA_BETA_BUNDLE_ID:
       return "beta";
+    case SYNARA_ZH_CN_BUNDLE_ID:
+      return "zh-cn";
     default:
       return "unknown";
   }
@@ -113,6 +116,8 @@ export function desktopFlavorFromProtocol(
       return "canary";
     case "synara-cua:":
       return "cua";
+    case "synara-zh-cn:":
+      return "zh-cn";
     case "synara:":
       return isDevBuild ? "development" : "production";
     default:

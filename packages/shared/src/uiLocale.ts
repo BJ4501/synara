@@ -66,3 +66,25 @@ export function resolveUiLocale(
   }
   return "en";
 }
+
+/**
+ * Intl date/number locale. Follow system keeps the platform regional tag
+ * (en-GB, zh-TW, zh-Hans-CN). An explicit UI language uses that catalog locale.
+ */
+export function resolveFormatLocale(
+  preference: UiLanguagePreference,
+  languages: readonly string[],
+): string {
+  const selected = resolveUiLanguagePreference(preference);
+  if (selected !== "system") return selected;
+  for (const candidate of languages) {
+    const trimmed = candidate.trim();
+    if (!trimmed) continue;
+    try {
+      return new Intl.Locale(trimmed).toString();
+    } catch {
+      // Skip malformed candidates; the next preferred language may still be usable.
+    }
+  }
+  return resolveUiLocale(preference, languages);
+}

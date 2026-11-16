@@ -25,6 +25,13 @@ export const SYNARA_REMOTE_BUNDLE_ID = `${SYNARA_PRODUCTION_BUNDLE_ID}.remote`;
 export const SYNARA_REMOTE_DESKTOP_SCHEME = "synara-remote";
 export const SYNARA_REMOTE_DESKTOP_ORIGIN = `${SYNARA_REMOTE_DESKTOP_SCHEME}://app`;
 export const SYNARA_REMOTE_DESKTOP_ENTRY_URL = `${SYNARA_REMOTE_DESKTOP_ORIGIN}/index.html`;
+/** Custom Simplified Chinese installer; must never share Stable's Windows product identity. */
+export const SYNARA_ZH_CN_BUNDLE_ID = `${SYNARA_PRODUCTION_BUNDLE_ID}.zh-cn`;
+export const SYNARA_ZH_CN_DESKTOP_SCHEME = "synara-zh-cn";
+export const SYNARA_ZH_CN_DESKTOP_ORIGIN = `${SYNARA_ZH_CN_DESKTOP_SCHEME}://app`;
+export const SYNARA_ZH_CN_DESKTOP_ENTRY_URL = `${SYNARA_ZH_CN_DESKTOP_ORIGIN}/index.html`;
+export const SYNARA_ZH_CN_WINDOWS_INSTALLER_GUID = "b7e4c1a9-2d58-4f0b-9c6e-8a13f5d20471";
+export const SYNARA_ZH_CN_HOME_ENV = "SYNARA_ZH_CN_HOME";
 export const SYNARA_SOURCE_DESKTOP_BUILD_MARKER = "synara-source-desktop-build-v2";
 export const SYNARA_DESKTOP_SMOKE_USER_DATA_ENV = "SYNARA_DESKTOP_SMOKE_USER_DATA";
 
@@ -34,13 +41,15 @@ export type SynaraDesktopFlavor =
   | "canary"
   | "cua"
   | "beta"
-  | "remote";
+  | "remote"
+  | "zh-cn";
 export const SYNARA_PACKAGED_DESKTOP_FLAVORS = [
   "production",
   "canary",
   "cua",
   "beta",
   "remote",
+  "zh-cn",
 ] as const;
 export type SynaraPackagedDesktopFlavor = (typeof SYNARA_PACKAGED_DESKTOP_FLAVORS)[number];
 
@@ -84,7 +93,7 @@ export function resolveSynaraDesktopFlavor(input: {
   if (requestedFlavor === "canary") {
     return "canary";
   }
-  if (requestedFlavor === "beta" || requestedFlavor === "remote") {
+  if (requestedFlavor === "beta" || requestedFlavor === "remote" || requestedFlavor === "zh-cn") {
     return requestedFlavor;
   }
   if (
@@ -111,7 +120,8 @@ export function resolveSynaraDesktopRuntimeFlavor(input: {
       flavor === "canary" ||
       flavor === "cua" ||
       flavor === "beta" ||
-      flavor === "remote"
+      flavor === "remote" ||
+      flavor === "zh-cn"
     ) {
       return flavor;
     }
@@ -134,6 +144,7 @@ export function canOverrideDesktopSmokeUserData(input: {
     input.packagedFlavor === "cua" ||
     input.packagedFlavor === "beta" ||
     input.packagedFlavor === "remote" ||
+    input.packagedFlavor === "zh-cn" ||
     (input.packagedFlavor === undefined &&
       input.sourceBuildMarker === SYNARA_SOURCE_DESKTOP_BUILD_MARKER)
   );
@@ -193,6 +204,20 @@ export function synaraDesktopIdentity(flavor: SynaraDesktopFlavor): SynaraDeskto
       usesScriptedUpdates: false,
     };
   }
+  if (flavor === "zh-cn") {
+    return {
+      flavor,
+      displayName: "Synara zh-CN",
+      bundleId: SYNARA_ZH_CN_BUNDLE_ID,
+      scheme: SYNARA_ZH_CN_DESKTOP_SCHEME,
+      origin: SYNARA_ZH_CN_DESKTOP_ORIGIN,
+      entryUrl: SYNARA_ZH_CN_DESKTOP_ENTRY_URL,
+      userDataDirectoryName: "synara-zh-cn",
+      defaultHomeDirectoryName: ".synara-zh-cn",
+      // Isolated custom installer: never consume the official GitHub update feed.
+      usesScriptedUpdates: true,
+    };
+  }
   if (flavor === "development") {
     return {
       flavor,
@@ -228,7 +253,8 @@ export function synaraDesktopIdentity(flavor: SynaraDesktopFlavor): SynaraDeskto
 export function synaraSourceDesktopIdentity(
   identity: SynaraDesktopIdentity,
 ): SynaraDesktopIdentity {
-  if (identity.flavor !== "beta" && identity.flavor !== "remote") return identity;
+  if (identity.flavor !== "beta" && identity.flavor !== "remote" && identity.flavor !== "zh-cn")
+    return identity;
   return {
     ...identity,
     displayName: `${identity.displayName} (Source)`,

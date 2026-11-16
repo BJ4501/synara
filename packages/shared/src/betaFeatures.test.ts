@@ -16,6 +16,7 @@ import {
   SYNARA_DEVELOPMENT_BUNDLE_ID,
   SYNARA_PRODUCTION_BUNDLE_ID,
   SYNARA_REMOTE_BUNDLE_ID,
+  SYNARA_ZH_CN_BUNDLE_ID,
 } from "./desktopIdentity";
 
 describe("isBetaFeatureEnabled", () => {
@@ -111,6 +112,7 @@ describe("desktopFlavorFromBundleId", () => {
     expect(desktopFlavorFromBundleId(SYNARA_CUA_BUNDLE_ID)).toBe("cua");
     expect(desktopFlavorFromBundleId(SYNARA_BETA_BUNDLE_ID)).toBe("beta");
     expect(desktopFlavorFromBundleId(SYNARA_REMOTE_BUNDLE_ID)).toBe("remote");
+    expect(desktopFlavorFromBundleId(SYNARA_ZH_CN_BUNDLE_ID)).toBe("zh-cn");
   });
 
   it("trims surrounding whitespace", () => {
@@ -131,6 +133,7 @@ describe("desktopFlavorFromProtocol", () => {
     expect(desktopFlavorFromProtocol("synara-remote:", false)).toBe("remote");
     expect(desktopFlavorFromProtocol("synara-canary:", false)).toBe("canary");
     expect(desktopFlavorFromProtocol("synara-cua:", false)).toBe("cua");
+    expect(desktopFlavorFromProtocol("synara-zh-cn:", false)).toBe("zh-cn");
     expect(desktopFlavorFromProtocol("synara:", false)).toBe("production");
   });
 

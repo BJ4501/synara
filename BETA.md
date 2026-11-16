@@ -243,10 +243,13 @@ set to that beta version, otherwise its Windows build blocks publication.
 bun run dist:desktop:artifact -- --platform mac --target dmg --arch arm64 --flavor beta
 ```
 
-`--flavor` accepts `production` (default), `canary`, `cua`, `beta`, or `remote`, and the
-`SYNARA_DESKTOP_FLAVOR` env var is equivalent. The packaged `package.json` embeds the
-resolved flavor (`synaraDesktopFlavor`), so a packaged build cannot silently lose its
-identity at runtime; on packaged builds the embedded value wins over the env var.
+`--flavor` accepts `production` (default), `canary`, `cua`, `beta`, `remote`, or the
+custom `zh-cn` installer flavor. `SYNARA_DESKTOP_FLAVOR` is equivalent. The packaged
+`package.json` embeds the resolved flavor (`synaraDesktopFlavor`), so a packaged build
+cannot silently lose its identity at runtime; on packaged builds the embedded value
+wins over the env var. Official Beta/Stable update feeds stay on `beta` and
+`production`. The custom `zh-cn` flavor has its own Windows identity and no update
+feed; see [internationalization](docs/internationalization.md#custom-zh-cn-windows-installer).
 
 ## Joining beta from stable
 

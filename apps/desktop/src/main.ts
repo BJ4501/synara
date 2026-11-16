@@ -104,6 +104,7 @@ import {
   SYNARA_DESKTOP_SMOKE_USER_DATA_ENV,
   SYNARA_DESKTOP_BUNDLE_ID_ENV,
   SYNARA_SOURCE_DESKTOP_BUILD_MARKER,
+  SYNARA_ZH_CN_HOME_ENV,
   canOverrideDesktopSmokeUserData,
   resolveSynaraDesktopRuntimeFlavor,
   synaraDesktopIdentity,
@@ -443,7 +444,9 @@ const BASE_DIR =
     ? process.env.SYNARA_REMOTE_HOME?.trim()
     : desktopFlavor === "beta"
       ? process.env.SYNARA_BETA_HOME?.trim()
-      : process.env.SYNARA_HOME?.trim()) ||
+      : desktopFlavor === "zh-cn"
+        ? process.env[SYNARA_ZH_CN_HOME_ENV]?.trim()
+        : process.env.SYNARA_HOME?.trim()) ||
   Path.join(OS.homedir(), desktopIdentity.defaultHomeDirectoryName);
 const STATE_DIR = Path.join(BASE_DIR, "userdata");
 const DESKTOP_WINDOW_STATE_PATH = Path.join(STATE_DIR, "desktop-window-state.json");
@@ -501,6 +504,8 @@ const hasSingleInstanceLock = app.requestSingleInstanceLock();
 // Stable stays opt-in for product events and never runs diagnostics.
 const productAnalytics = new ProductAnalytics({
   homeDir: BASE_DIR,
+  // Official ingest only knows stable/beta/remote. The custom zh-CN installer
+  // stays opt-in like Stable and must not invent a new channel or share Beta.
   channel: desktopFlavor === "beta" ? "beta" : desktopFlavor === "remote" ? "remote" : "stable",
   appVersion: app.getVersion(),
   platform: process.platform,

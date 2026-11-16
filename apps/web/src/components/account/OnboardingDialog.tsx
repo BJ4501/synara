@@ -32,6 +32,7 @@ import {
   sanitizeHandleInput,
 } from "~/lib/accountLogic";
 import { cn } from "~/lib/utils";
+import { useTranslation } from "~/i18n";
 
 interface OnboardingDialogProps {
   readonly open: boolean;
@@ -58,6 +59,7 @@ export function ProfileSetupForm({
   variant = "dialog",
 }: Omit<OnboardingDialogProps, "open"> & { readonly variant?: "dialog" | "embedded" }) {
   const account = useAccount();
+  const { t } = useTranslation();
   const [name, setName] = useState(me.name);
   const [handle, setHandle] = useState(sanitizeHandleInput(me.name.replace(/\s+/g, "-")));
   const [workspaceName, setWorkspaceName] = useState(me.organization.name);
@@ -72,7 +74,7 @@ export function ProfileSetupForm({
 
   const formatError =
     handle === takenHandle
-      ? "That handle is already taken — pick another."
+      ? t("common:account_handleTaken")
       : handleTouched
         ? handleFormatError(handle)
         : null;
@@ -96,15 +98,15 @@ export function ProfileSetupForm({
       });
       toastManager.add({
         type: "success",
-        title: "You're all set",
-        description: "Your profile is private. You can publish it from Edit profile.",
+        title: t("common:account_allSet"),
+        description: t("common:account_profilePrivatePublish"),
       });
       onFinished();
     } catch (cause) {
       if (readAccountErrorCode(cause) === "handle_taken") {
         setTakenHandle(handle);
       } else {
-        setError(accountErrorMessage(cause, "Could not save your profile. Try again."));
+        setError(accountErrorMessage(cause, t("common:account_couldNotSaveProfile")));
       }
     }
   };
@@ -126,7 +128,7 @@ export function ProfileSetupForm({
                 key={color}
                 type="button"
                 onClick={() => setAvatarColor(color)}
-                aria-label={`Use ${color}`}
+                aria-label={t("common:account_useColor", { value0: color })}
                 className={cn(
                   "size-4 rounded-full transition-transform hover:scale-110",
                   avatarColor === color &&
@@ -139,10 +141,12 @@ export function ProfileSetupForm({
         )}
         {variant === "dialog" ? (
           <DialogTitle className="font-system-ui text-lg font-semibold">
-            Set up your profile
+            {t("common:account_setUpProfile")}
           </DialogTitle>
         ) : (
-          <h3 className="text-ui-lg font-medium text-foreground">Set up your profile</h3>
+          <h3 className="text-ui-lg font-medium text-foreground">
+            {t("common:account_setUpProfile")}
+          </h3>
         )}
       </div>
 
@@ -154,17 +158,17 @@ export function ProfileSetupForm({
         }}
       >
         <label className="flex flex-col gap-1.5">
-          <span className={dialogFieldLabelClassName}>Name</span>
+          <span className={dialogFieldLabelClassName}>{t("common:scripts_name")}</span>
           <Input
             value={name}
             autoComplete="name"
-            placeholder="Your name"
+            placeholder={t("common:edit_yourName")}
             disabled={saving}
             onChange={(event) => setName(event.target.value)}
           />
         </label>
         <label className="flex flex-col gap-1.5">
-          <span className={dialogFieldLabelClassName}>Handle</span>
+          <span className={dialogFieldLabelClassName}>{t("common:account_handle")}</span>
           <InputGroup>
             <InputGroupAddon>
               <InputGroupText>@</InputGroupText>
@@ -194,15 +198,17 @@ export function ProfileSetupForm({
             </span>
           ) : (
             <span id={handleHelpId} className="text-ui-sm leading-snug text-muted-foreground">
-              Your profile link, when published: {publicProfileDisplayUrl(handle || "handle")}
+              {t("common:account_profileLinkWhenPublished", {
+                value0: publicProfileDisplayUrl(handle || "handle"),
+              })}
             </span>
           )}
         </label>
         <label className="flex flex-col gap-1.5">
-          <span className={dialogFieldLabelClassName}>Workspace name</span>
+          <span className={dialogFieldLabelClassName}>{t("common:account_workspaceName")}</span>
           <Input
             value={workspaceName}
-            placeholder="Workspace"
+            placeholder={t("workspace:editor_workspaceLabel")}
             disabled={saving}
             onChange={(event) => setWorkspaceName(event.target.value)}
           />
@@ -217,7 +223,7 @@ export function ProfileSetupForm({
 
         <Button type="submit" className="mt-1 w-full" disabled={saving}>
           {saving ? <Spinner className="size-3.5" /> : null}
-          Finish
+          {t("common:account_finish")}
         </Button>
       </form>
     </div>

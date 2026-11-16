@@ -75,6 +75,20 @@ describe("desktop artifact identity", () => {
     },
   );
 
+  it("isolates packaged zh-CN Windows identity from production", () => {
+    const result = createDesktopArtifactIdentity({ platform: "win", flavor: "zh-cn" });
+    expect(result.packageMetadata).toEqual({
+      name: "synara-desktop-zh-cn",
+      productName: "Synara zh-CN",
+      synaraDesktopFlavor: "zh-cn",
+    });
+    expect(result.buildConfig.appId).toBe("com.emanueledipietro.synara.zh-cn");
+    expect(result.buildConfig.productName).toBe("Synara zh-CN");
+    expect(result.identity.userDataDirectoryName).toBe("synara-zh-cn");
+    expect(result.identity.usesScriptedUpdates).toBe(true);
+    expect(result.buildConfig.appId).not.toBe("com.emanueledipietro.synara");
+  });
+
   it.each(["canary", "cua"] as const)(
     "refuses %s on Windows until it has an isolated installer registration",
     (flavor) => {

@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import { createInstance } from "i18next";
 import { initReactI18next, useTranslation as useReactTranslation } from "react-i18next";
 
@@ -7,6 +7,7 @@ import {
   type LanguagePreference,
   type SupportedLocale,
   readLanguagePreference,
+  resolveFormatLocale,
   resolveLanguagePreference,
   resolveLocale,
   UI_LOCALES,
@@ -34,6 +35,25 @@ function storedPreference(): LanguagePreference {
 }
 
 let preference = storedPreference();
+let formatLocaleTag = resolveFormatLocale(
+  preference,
+  resolveLanguagePreference(preference) === "system" ? browserLanguages() : [],
+);
+const formatLocaleListeners = new Set<() => void>();
+
+function publishFormatLocale(next: string): void {
+  if (formatLocaleTag === next) return;
+  formatLocaleTag = next;
+  for (const listener of formatLocaleListeners) listener();
+}
+
+function subscribeFormatLocale(listener: () => void): () => void {
+  formatLocaleListeners.add(listener);
+  return () => {
+    formatLocaleListeners.delete(listener);
+  };
+}
+
 let synchronizedDesktopPreference:
   | {
       setter: NonNullable<NonNullable<Window["desktopBridge"]>["setLanguagePreference"]>;
@@ -89,28 +109,27 @@ export function t(message: string, values?: Record<string, unknown>): string {
   return i18n.t(message, { ...values, returnObjects: false });
 }
 
-// A factory call ties identity to the subscription value without closing over its old
-// language. An unused useCallback dependency is removed by React Compiler.
-function createTranslationSnapshot(_subscription: unknown): { t: typeof t; formatLocale: string } {
-  return {
-    t: (message, values) => t(message, values),
-    formatLocale: getFormatLocale(),
-  };
-}
-
 export function useTranslation(): { t: typeof t; locale: string; formatLocale: string } {
   const { t: reactiveTranslator, i18n: instance } = useReactTranslation(undefined, { i18n });
+  const formatLocale = useSyncExternalStore(
+    subscribeFormatLocale,
+    getFormatLocale,
+    getFormatLocale,
+  );
   // React Compiler needs a new identity on a language change. Delegating to the current
   // runtime also keeps callbacks already installed in native menus/event listeners current.
   const snapshot = useMemo(
-    () => createTranslationSnapshot(reactiveTranslator),
-    [reactiveTranslator],
+    () => ({
+      t: (message: string, values?: Record<string, unknown>) => t(message, values),
+      formatLocale,
+    }),
+    [reactiveTranslator, formatLocale],
   );
   return { ...snapshot, locale: instance.language };
 }
 
 export function getFormatLocale(): string {
-  return i18n.language;
+  return formatLocaleTag;
 }
 
 function updateDocumentLanguage(locale: SupportedLocale): void {
@@ -122,14 +141,15 @@ function updateDocumentLanguage(locale: SupportedLocale): void {
 
 /** Changes only the runtime; the existing app-settings hook owns persistence. */
 export function setLanguagePreference(next: LanguagePreference): void {
-  const locale = resolveLocale(
-    next,
-    resolveLanguagePreference(next) === "system" ? browserLanguages() : [],
-  );
+  const languages = resolveLanguagePreference(next) === "system" ? browserLanguages() : [];
+  const locale = resolveLocale(next, languages);
   if (preference !== next || i18n.language !== locale) {
     preference = next;
     void i18n.changeLanguage(locale);
+  } else {
+    preference = next;
   }
+  publishFormatLocale(resolveFormatLocale(next, languages));
   updateDocumentLanguage(locale);
   syncDesktopLanguage();
 }
@@ -143,8 +163,10 @@ export function initializeI18n(): () => void {
   const onLanguageChange = () => {
     if (resolveLanguagePreference(preference) !== "system") return;
     // Refresh native candidates once: preload values would otherwise stay frozen at launch.
-    const locale = resolveLocale(preference, browserLanguages());
+    const languages = browserLanguages();
+    const locale = resolveLocale(preference, languages);
     void i18n.changeLanguage(locale);
+    publishFormatLocale(resolveFormatLocale(preference, languages));
     updateDocumentLanguage(locale);
     syncDesktopLanguage(true);
   };

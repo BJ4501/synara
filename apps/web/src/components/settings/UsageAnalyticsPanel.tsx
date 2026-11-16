@@ -34,12 +34,15 @@ import {
   usageAnalyticsWindow,
 } from "./usageAnalytics.logic";
 import { SettingsCard, SettingsListRow } from "./SettingsPanelPrimitives";
+import { getFormatLocale, t, useTranslation } from "~/i18n";
 
-const USD = new Intl.NumberFormat(undefined, {
-  style: "currency",
-  currency: "USD",
-  currencyDisplay: "narrowSymbol",
-});
+function usdFormatter(locale = getFormatLocale()) {
+  return new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency: "USD",
+    currencyDisplay: "narrowSymbol",
+  });
+}
 
 const RANGES: ReadonlyArray<UsageAnalyticsRange> = ["7d", "30d", "90d", "1y"];
 
@@ -53,14 +56,14 @@ function analyticsRequest(window: UsageAnalyticsWindow, scope: StatsUsageAnalyti
 }
 
 function formatUsd(value: number): string {
-  return USD.format(value);
+  return usdFormatter().format(value);
 }
 
 /** Axis and tooltip money: whole dollars once amounts are large. */
 function formatUsdShort(value: number): string {
   if (value >= 1000) return `$${formatCompact(value)}`;
   if (value >= 10) return `$${Math.round(value)}`;
-  return USD.format(value);
+  return usdFormatter().format(value);
 }
 
 function formatTokens(value: number): string {
@@ -85,7 +88,9 @@ function ChangeLabel(props: { change: number | null }) {
   const up = props.change >= 0;
   return (
     <span className={cn("text-ui-sm", up ? "text-info" : "text-muted-foreground")}>
-      {up ? "↑" : "↓"} {Math.abs(props.change)}% vs previous period
+      {t("settings:usage_vsPreviousPeriod", {
+        value0: `${up ? "↑" : "↓"} ${Math.abs(props.change)}`,
+      })}
     </span>
   );
 }
@@ -118,6 +123,7 @@ function percentOf(part: number, total: number): number {
 }
 
 export function UsageAnalyticsPanel() {
+  const { t, formatLocale } = useTranslation();
   const [range, setRange] = useState<UsageAnalyticsRange>("30d");
   const [metricChoice, setMetricChoice] = useState<UsageAnalyticsMetric | null>(null);
   const [scope, setScope] = useState<StatsUsageAnalyticsScope>("synara");
@@ -154,17 +160,17 @@ export function UsageAnalyticsPanel() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
           <SegmentedPicker<UsageAnalyticsMetric>
-            ariaLabel="Metric"
+            ariaLabel={t("settings:usage_metric")}
             className="w-44"
             value={metric}
             onValueChange={setMetricChoice}
             options={[
-              { value: "cost", label: "Cost" },
-              { value: "tokens", label: "Tokens" },
+              { value: "cost", label: t("chat:sessionStatus_cost") },
+              { value: "tokens", label: t("settings:usage_tokens") },
             ]}
           />
           <SegmentedPicker<UsageAnalyticsRange>
-            ariaLabel="Period"
+            ariaLabel={t("settings:usage_period")}
             className="w-60"
             value={range}
             onValueChange={setRange}
@@ -177,39 +183,37 @@ export function UsageAnalyticsPanel() {
           />
         </div>
         <SegmentedPicker<StatsUsageAnalyticsScope>
-          ariaLabel="Usage scope"
+          ariaLabel={t("settings:usage_scope")}
           className="w-52"
           value={scope}
           onValueChange={setScope}
           options={[
-            { value: "synara", label: "In Synara" },
-            { value: "mac", label: "This Mac" },
+            { value: "synara", label: t("settings:usage_inSynara") },
+            { value: "mac", label: t("settings:usage_thisMac") },
           ]}
         />
       </div>
       {query.isError && !view ? (
         <SettingsCard>
           <SettingsListRow
-            title="Couldn’t load usage"
+            title={t("settings:usage_couldNotLoad")}
             actions={
               <Button variant="outline" size="sm" onClick={() => void query.refetch()}>
-                Try again
+                {t("chat:profile_tryAgain")}
               </Button>
             }
           />
         </SettingsCard>
       ) : !view ? (
         <SettingsCard>
-          <SettingsListRow title="Loading usage…" />
+          <SettingsListRow title={t("settings:usage_loading")} />
         </SettingsCard>
       ) : view.totals.tokens === 0 && view.totals.costUsd === 0 && view.totals.turns === 0 ? (
         <SettingsCard>
           <SettingsListRow
-            title="No usage in this period"
+            title={t("settings:usage_noneInPeriod")}
             description={
-              scope === "mac"
-                ? "Chats in Synara and Claude Code or Codex sessions on this Mac show up here."
-                : "Chats you run in Synara show up here as they use tokens."
+              scope === "mac" ? t("settings:usage_emptyMac") : t("settings:usage_emptySynara")
             }
           />
         </SettingsCard>
@@ -218,7 +222,12 @@ export function UsageAnalyticsPanel() {
           aria-busy={loadingNewPeriod}
           className={cn("transition-opacity duration-150", loadingNewPeriod && "opacity-50")}
         >
-          <UsageAnalyticsBody view={view} metric={metric} rangeDays={dataWindow.days.length} />
+          <UsageAnalyticsBody
+            view={view}
+            metric={metric}
+            rangeDays={dataWindow.days.length}
+            formatLocale={formatLocale}
+          />
         </div>
       )}
     </div>
@@ -229,6 +238,7 @@ function UsageAnalyticsBody(props: {
   view: UsageAnalyticsView;
   metric: UsageAnalyticsMetric;
   rangeDays: number;
+  formatLocale: string;
 }) {
   const { view, metric } = props;
   const [hidden, setHidden] = useState<ReadonlySet<UsageAnalyticsProvider>>(() => new Set());
@@ -281,7 +291,7 @@ function UsageAnalyticsBody(props: {
     .map((provider) => providerLabel(provider.provider))
     .join(", ");
   const pricesUpdated = view.pricing.fetchedAt
-    ? new Date(view.pricing.fetchedAt).toLocaleDateString(undefined, {
+    ? new Date(view.pricing.fetchedAt).toLocaleDateString(props.formatLocale, {
         month: "short",
         day: "numeric",
       })
@@ -303,7 +313,9 @@ function UsageAnalyticsBody(props: {
         <div className="flex flex-col gap-8 @3xl:flex-row @3xl:gap-10">
           <div className="flex flex-col gap-1.5 @3xl:w-60 @3xl:shrink-0">
             <span className="text-ui-sm tracking-wide text-muted-foreground uppercase">
-              {metric === "cost" ? "API cost" : "Tokens processed"}
+              {metric === "cost"
+                ? t("settings:usage_apiCost")
+                : t("settings:usage_tokensProcessed")}
             </span>
             <span className="text-3xl font-semibold tracking-tight text-foreground tabular-nums">
               {metric === "cost" ? formatUsd(total) : formatNumber(total)}
@@ -319,8 +331,10 @@ function UsageAnalyticsBody(props: {
             />
             <span className="text-ui-sm text-muted-foreground">
               {metric === "cost"
-                ? "At API rates, not what plans bill."
-                : `${formatTokens(view.totals.cacheReadTokens)} read from cache.`}
+                ? t("settings:usage_atApiRates")
+                : t("settings:usage_readFromCache", {
+                    value0: formatTokens(view.totals.cacheReadTokens),
+                  })}
             </span>
             <ul className="mt-4 flex flex-col gap-3.5">
               {providers.map((provider) => (
@@ -339,7 +353,9 @@ function UsageAnalyticsBody(props: {
           <div className="@container/daily flex min-w-0 flex-1 flex-col gap-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="text-ui font-semibold text-foreground">
-                {metric === "cost" ? "Daily cost" : "Daily tokens"}
+                {metric === "cost"
+                  ? t("settings:usage_dailyCost")
+                  : t("settings:usage_dailyTokens")}
               </span>
               {legend}
             </div>
@@ -353,15 +369,18 @@ function UsageAnalyticsBody(props: {
             />
             <dl className="grid gap-x-6 gap-y-1.5 border-t pt-3 @md/daily:grid-cols-3">
               <InsightRow
-                label="Peak day"
+                label={t("settings:profile_peakDay")}
                 value={
                   peakDay && valueOf(peakDay) > 0
-                    ? `${peakDay.date.toLocaleDateString(undefined, { month: "short", day: "numeric" })} · ${format(valueOf(peakDay))}`
+                    ? `${peakDay.date.toLocaleDateString(props.formatLocale, { month: "short", day: "numeric" })} · ${format(valueOf(peakDay))}`
                     : "—"
                 }
               />
-              <InsightRow label="Weekday avg." value={format(weekdayAverage)} />
-              <InsightRow label="Active days" value={`${view.activeDays} of ${props.rangeDays}`} />
+              <InsightRow label={t("settings:usage_weekdayAvg")} value={format(weekdayAverage)} />
+              <InsightRow
+                label={t("settings:usage_activeDays")}
+                value={`${view.activeDays} of ${props.rangeDays}`}
+              />
             </dl>
           </div>
         </div>
@@ -402,7 +421,11 @@ function UsageAnalyticsBody(props: {
 
       <section className="flex flex-col gap-4">
         <SectionTitle
-          title={metric === "cost" ? "Cost by provider" : "Tokens by provider"}
+          title={
+            metric === "cost"
+              ? t("settings:usage_costByProvider")
+              : t("settings:usage_tokensByProvider")
+          }
           detail="Each provider on its own line, to compare their shapes."
           action={legend}
         />
@@ -416,7 +439,7 @@ function UsageAnalyticsBody(props: {
 
       <section className="flex flex-col gap-4">
         <SectionTitle
-          title="Models"
+          title={t("settings:nav_models")}
           detail={
             models[0]
               ? metric === "cost"
@@ -427,11 +450,11 @@ function UsageAnalyticsBody(props: {
         />
         <SettingsCard>
           <div className="grid grid-cols-[minmax(0,1fr)_4.5rem_5rem] items-center gap-3 px-3 py-2 text-ui-sm text-muted-foreground @md:grid-cols-[minmax(0,1fr)_3.5rem_4.5rem_5.5rem] @xl:grid-cols-[minmax(0,1fr)_4rem_5rem_6rem_6rem]">
-            <span>Model</span>
-            <span className="hidden text-right @md:block">Turns</span>
-            <span className="text-right">Tokens</span>
-            <span className="text-right">Cost</span>
-            <span className="hidden @xl:block">Share</span>
+            <span>{t("chat:detail_model")}</span>
+            <span className="hidden text-right @md:block">{t("common:diff_turns")}</span>
+            <span className="text-right">{t("settings:usage_tokens")}</span>
+            <span className="text-right">{t("chat:sessionStatus_cost")}</span>
+            <span className="hidden @xl:block">{t("settings:profile_share")}</span>
           </div>
           {models.slice(0, 12).map((model) => (
             <div
@@ -466,7 +489,10 @@ function UsageAnalyticsBody(props: {
 
       <section className="grid gap-10 @3xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
         <div className="flex flex-col gap-4">
-          <SectionTitle title="Projects" detail="Where the work happened." />
+          <SectionTitle
+            title={t("workspace:sections_projects")}
+            detail="Where the work happened."
+          />
           <ul className="flex flex-col gap-3.5">
             {projects.slice(0, 8).map((project) => (
               <ModelUsageRow
@@ -484,7 +510,7 @@ function UsageAnalyticsBody(props: {
         {originTotal > 0 ? (
           <div className="flex flex-col gap-4">
             <SectionTitle
-              title="Who started the work"
+              title={t("settings:usage_whoStarted")}
               detail={
                 view.scope === "mac"
                   ? "Tokens by turn origin, in Synara chats."
@@ -512,59 +538,78 @@ function UsageAnalyticsBody(props: {
 
       <section className="grid gap-10 @3xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
         <div className="flex flex-col gap-4">
-          <SectionTitle title="When you work" detail="Tokens by weekday and hour, in your time." />
+          <SectionTitle
+            title={t("settings:usage_whenYouWork")}
+            detail="Tokens by weekday and hour, in your time."
+          />
           <RhythmChart rhythm={view.rhythm} format={formatTokens} />
         </div>
         <div className="flex flex-col gap-4">
-          <SectionTitle title="About these numbers" />
+          <SectionTitle title={t("settings:usage_aboutTheseNumbers")} />
           <ul className="flex list-disc flex-col gap-2 pl-4 text-ui text-muted-foreground marker:text-foreground/30">
-            <li>
-              Cost is at API rates. A subscription bills its own price, which can be much less.
-            </li>
-            {reportedNames ? <li>{reportedNames}: cost as the provider reported it.</li> : null}
+            <li>{t("settings:usage_costAtApiRates")}</li>
+            {reportedNames ? (
+              <li>{t("settings:usage_costAsReported", { value0: reportedNames })}</li>
+            ) : null}
             {estimatedNames ? (
               <li>
-                {estimatedNames}: no cost reported, so its tokens are priced at API list prices
-                {pricesUpdated ? ` (LiteLLM, updated ${pricesUpdated})` : ""}.
+                {t("settings:usage_costEstimated", {
+                  value0: estimatedNames,
+                  value1: pricesUpdated
+                    ? t("settings:usage_litellmUpdated", { value0: pricesUpdated })
+                    : "",
+                })}
               </li>
             ) : null}
             {view.unpriced.tokens > 0 ? (
               <li>
                 {view.pricing.status === "unavailable"
-                  ? "API prices could not be downloaded"
-                  : `${view.unpriced.models.join(", ") || "Some models"} ${view.unpriced.models.length === 1 ? "has" : "have"} no API list price`}
-                , so {formatTokens(view.unpriced.tokens)} tokens have no cost.
+                  ? t("settings:usage_apiPricesUnavailable")
+                  : t(
+                      view.unpriced.models.length === 1
+                        ? "settings:usage_noApiListPrice_one"
+                        : "settings:usage_noApiListPrice_other",
+                      {
+                        value0: view.unpriced.models.join(", ") || t("settings:usage_someModels"),
+                      },
+                    )}
+                {t("settings:usage_soTokensHaveNoCost", {
+                  value0: formatTokens(view.unpriced.tokens),
+                })}
               </li>
             ) : null}
             {view.unpriced.unsplitTokens > 0 ? (
               <li>
-                {formatTokens(view.unpriced.unsplitTokens)} tokens from deleted or older chats have
-                no input/output split, so they have no cost.
+                {t("settings:usage_unsplitTokens", {
+                  value0: formatTokens(view.unpriced.unsplitTokens),
+                })}
               </li>
             ) : null}
-            {tokenOnlyNames ? <li>{tokenOnlyNames}: tokens only, no cost.</li> : null}
+            {tokenOnlyNames ? (
+              <li>{t("settings:usage_tokensOnlyNoCost", { value0: tokenOnlyNames })}</li>
+            ) : null}
             {view.unavailableProviders.length > 0 ? (
               <li>
-                {view.unavailableProviders.map((provider) => providerLabel(provider)).join(", ")}{" "}
-                ran turns without reporting token usage.
+                {t("settings:usage_ranTurnsWithoutReporting", {
+                  value0: view.unavailableProviders
+                    .map((provider) => providerLabel(provider))
+                    .join(", "),
+                })}
               </li>
             ) : null}
             {view.scope === "mac" && view.sessionFileProviders.length > 0 ? (
               <li>
-                {view.sessionFileProviders.map((provider) => providerLabel(provider)).join(", ")}:
-                every session on this Mac, read from their own session files. Other providers: chats
-                run in Synara.
+                {t("settings:usage_sessionFilesOnMac", {
+                  value0: view.sessionFileProviders
+                    .map((provider) => providerLabel(provider))
+                    .join(", "),
+                })}
               </li>
             ) : (
-              <li>
-                Only chats run in Synara are counted. Deleted chats keep the turns you started.
-              </li>
+              <li>{t("settings:usage_onlySynaraChatsCounted")}</li>
             )}
             {view.scope === "mac" && view.sessionFileProviders.includes("claudeAgent") ? (
-              <li>
-                Claude Code deletes session files after 30 days unless set otherwise, so older
-                Claude usage may be missing.
-              </li>
+              <li>{t("settings:usage_claudeSessionFilesExpire")}</li>
             ) : null}
           </ul>
         </div>

@@ -3,7 +3,10 @@ import { spawnSync } from "node:child_process";
 import { basename } from "node:path";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
-import { SYNARA_PACKAGED_DESKTOP_FLAVORS } from "@synara/shared/desktopIdentity";
+import {
+  SYNARA_PACKAGED_DESKTOP_FLAVORS,
+  SYNARA_ZH_CN_WINDOWS_INSTALLER_GUID,
+} from "@synara/shared/desktopIdentity";
 import { desktopIconAssetPaths } from "./lib/brand-assets.ts";
 
 import {
@@ -22,6 +25,8 @@ import {
   AUDIO_CAPTURE_USAGE_DESCRIPTION,
   MICROPHONE_USAGE_DESCRIPTION,
   shouldDisablePackagedDesktopUpdateFeed,
+  shouldSkipNativeNpmRebuild,
+  stagedDesktopDependencyInstall,
   validateDesktopNativeBuildHost,
   WINDOWS_INSTALLER_GUID,
 } from "./lib/desktop-platform-build-config.ts";
@@ -69,6 +74,79 @@ describe("createDesktopPlatformBuildConfig", () => {
       }),
       true,
     );
+  });
+
+  it("isolates the custom zh-CN Windows installer from Stable and Beta", () => {
+    const custom = createDesktopPlatformBuildConfig({
+      platform: "win",
+      target: "nsis",
+      flavor: "zh-cn",
+    });
+    const production = createDesktopPlatformBuildConfig({
+      platform: "win",
+      target: "nsis",
+      flavor: "production",
+    });
+    const beta = createDesktopPlatformBuildConfig({
+      platform: "win",
+      target: "nsis",
+      flavor: "beta",
+    });
+    assert.equal(custom.nsis?.guid, SYNARA_ZH_CN_WINDOWS_INSTALLER_GUID);
+    assert.notEqual(custom.nsis?.guid, WINDOWS_INSTALLER_GUID);
+    assert.notEqual(custom.nsis?.guid, beta.nsis?.guid);
+    assert.equal(production.nsis?.guid, WINDOWS_INSTALLER_GUID);
+    const linux = createDesktopPlatformBuildConfig({
+      platform: "linux",
+      target: "AppImage",
+      flavor: "zh-cn",
+    });
+    assert.equal(linux.linux?.executableName, "synara-zh-cn");
+  });
+
+  it("gates Windows optional-binary and npmRebuild flags to Windows targets only", () => {
+    const winCross = stagedDesktopDependencyInstall({
+      platform: "win",
+      arch: "x64",
+      hostPlatform: "linux",
+    });
+    assert.equal(winCross.windowsCrossHost, true);
+    assert.deepStrictEqual(
+      [...winCross.bunInstallArgs],
+      [
+        "install",
+        "--omit=dev",
+        "--ignore-scripts",
+        "--linker",
+        "hoisted",
+        "--os=win32",
+        "--cpu=x64",
+      ],
+    );
+    assert.equal(winCross.npmRebuild, false);
+    assert.equal(shouldSkipNativeNpmRebuild({ platform: "win", hostPlatform: "linux" }), true);
+
+    const winNative = stagedDesktopDependencyInstall({
+      platform: "win",
+      arch: "x64",
+      hostPlatform: "win32",
+    });
+    assert.equal(winNative.windowsCrossHost, false);
+    assert.equal(winNative.bunInstallArgs.includes("--os=win32"), false);
+    assert.equal(winNative.npmRebuild, undefined);
+    assert.equal(shouldSkipNativeNpmRebuild({ platform: "win", hostPlatform: "win32" }), false);
+
+    for (const platform of ["linux", "mac"] as const) {
+      const other = stagedDesktopDependencyInstall({
+        platform,
+        arch: "x64",
+        hostPlatform: "linux",
+      });
+      assert.equal(other.windowsCrossHost, false);
+      assert.equal(other.bunInstallArgs.includes("--os=win32"), false);
+      assert.equal(other.npmRebuild, undefined);
+      assert.equal(shouldSkipNativeNpmRebuild({ platform, hostPlatform: "linux" }), false);
+    }
   });
 
   it("isolates Remote's Windows installer registration and Linux executable", () => {

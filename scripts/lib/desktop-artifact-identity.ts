@@ -12,7 +12,10 @@ export function createDesktopArtifactIdentity(input: {
   // Stable's NSIS GUID deliberately survives public bundle ID changes. An
   // experimental installer must not register itself as that same product;
   // Beta and Remote have their own installer GUIDs.
-  if (input.platform === "win" && !["production", "beta", "remote"].includes(input.flavor)) {
+  if (
+    input.platform === "win" &&
+    !["production", "beta", "remote", "zh-cn"].includes(input.flavor)
+  ) {
     throw new Error("Isolated desktop flavors are currently supported on macOS and Linux only.");
   }
   const identity = synaraDesktopIdentity(input.flavor);

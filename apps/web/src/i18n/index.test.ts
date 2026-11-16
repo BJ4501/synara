@@ -41,7 +41,7 @@ describe("bundled translations", () => {
     vi.stubGlobal("navigator", { languages: ["en-US"] });
     setLanguagePreference("system");
     expect(t("workspace:toast_settings")).toBe("设置");
-    expect(getFormatLocale()).toBe("zh-CN");
+    expect(getFormatLocale()).toBe("zh-Hans-CN");
   });
 
   it("refreshes native language candidates once when System changes, keeping document and renderer in sync", () => {
@@ -116,7 +116,7 @@ describe("bundled translations", () => {
       vi.stubGlobal("navigator", { languages: ["zh-SG"] });
       events.dispatchEvent(new Event("languagechange"));
       expect(changed).toHaveBeenCalledWith("zh-CN");
-      expect(getFormatLocale()).toBe("zh-CN");
+      expect(getFormatLocale()).toBe("zh-SG");
     } finally {
       i18n.off("languageChanged", changed);
       dispose();
@@ -160,14 +160,40 @@ describe("bundled translations", () => {
     }
   });
 
-  it("formats dates and numbers using the resolved interface locale", () => {
-    vi.stubGlobal("navigator", { languages: ["zh-SG"], language: "zh-SG" });
+  it("formats dates and numbers using the platform region for Follow system, and the selected UI locale when explicit", () => {
+    vi.stubGlobal("navigator", { languages: ["en-GB"], language: "en-GB" });
     setLanguagePreference("system");
-    expect(getFormatLocale()).toBe("zh-CN");
+    expect(i18n.language).toBe("en");
+    expect(getFormatLocale()).toBe("en-GB");
+    vi.stubGlobal("navigator", { languages: ["zh-TW"], language: "zh-TW" });
+    setLanguagePreference("system");
+    expect(i18n.language).toBe("en");
+    expect(getFormatLocale()).toBe("zh-TW");
     setLanguagePreference("en");
     expect(getFormatLocale()).toBe("en");
     setLanguagePreference("zh-CN");
     expect(getFormatLocale()).toBe("zh-CN");
+  });
+
+  it("applies a settings storage language change to the i18n runtime", () => {
+    const events = new EventTarget();
+    let raw = '{"language":"en"}';
+    vi.stubGlobal("window", events);
+    vi.stubGlobal("localStorage", { getItem: () => raw });
+    const dispose = initializeI18n();
+    try {
+      expect(i18n.language).toBe("en");
+      raw = '{"language":"zh-CN"}';
+      events.dispatchEvent(
+        Object.assign(new Event("synara:local_storage_change"), {
+          detail: { key: APP_SETTINGS_STORAGE_KEY },
+        }),
+      );
+      expect(i18n.language).toBe("zh-CN");
+      expect(t("workspace:toast_settings")).toBe("设置");
+    } finally {
+      dispose();
+    }
   });
 
   it("preserves literal URLs, paths, names, and already translated copy passed through metadata", () => {

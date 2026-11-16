@@ -1,8 +1,10 @@
 # Interface languages
 
-Synara supports English and Simplified Chinese (`zh-CN`). Choose **Settings → General → Language**. **Follow system** uses the browser's preferred languages on the web and Electron's preferred operating-system languages on desktop. An explicit available choice overrides the system preference.
+Synara supports English and Simplified Chinese (`zh-CN`). Choose **Settings → Appearance → Language**. **Follow system** uses the browser's preferred languages on the web and Electron's preferred operating-system languages on desktop. An explicit available choice overrides the system preference.
 
 The resolver tries candidates in preference order. Simplified Chinese includes `zh`, `zh-CN`, `zh-SG`, and `zh-Hans` variants. Traditional Chinese (`zh-TW`, `zh-HK`, `zh-MO`, or explicit `zh-Hant`) is not silently treated as Simplified Chinese: resolution continues to the next supported candidate, then falls back to English. Malformed preferences safely fall back to Follow system; malformed platform candidates are skipped.
+
+**Follow system** keeps the platform regional tag for dates and numbers (`en-GB`, `zh-TW`, `zh-Hans-CN`). An explicit English or Simplified Chinese choice formats with that catalog locale (`en` or `zh-CN`). Interface catalogs still only ship `en` and `zh-CN`.
 
 ## Ownership
 
@@ -12,7 +14,7 @@ The resolver tries candidates in preference order. Simplified Chinese includes `
 - `apps/web/src/i18n` owns the React subscription, document `lang`/`dir`, formatting locale, storage synchronization, and rich React messages. Bootstrap error screens use text nodes for translated strings.
 - `apps/desktop/src/i18n.ts` localizes native menus and startup dialogs before any renderer opens. `desktopPreferences.ts` atomically mirrors the preference beside the renderer's actual Electron `userData` profile, including isolated profile overrides. Only the main window's main frame may change that mirror.
 
-Settings retain their existing local storage ownership. A language change updates the mounted interface and native menu without replacing drafts or user content. Use the resolved interface locale for `Intl.DateTimeFormat`, `Intl.NumberFormat`, `Intl.RelativeTimeFormat`, and `Intl.ListFormat`.
+Settings retain their existing local storage ownership. A language change writes the existing app-settings record, dispatches `synara:local_storage_change`, and updates the mounted interface and native menu without replacing drafts or user content. Use `getFormatLocale()` for `Intl.DateTimeFormat`, `Intl.NumberFormat`, `Intl.RelativeTimeFormat`, and `Intl.ListFormat`.
 
 Keep user-authored content, provider output, model IDs, commands, filenames, URLs, protocol values, raw error details, and agent-facing prompts out of the catalogs. Do not persist catalog text or classify events by it; keep stable identifiers and render the label at the presentation boundary.
 
@@ -53,3 +55,18 @@ bun run i18n:coverage
 These commands are deterministic and read-only. The catalog check verifies locale/namespace/key parity, interpolation, protected tokens, message markup, and referenced keys. Extraction detects untranslated application UI literals; its narrow exemptions document product names and technical examples. Coverage also reports unchanged translations for review. CI runs catalog and extraction checks.
 
 Run the affected Vitest suites when changing runtime behavior. Verify an explicit Chinese preference, Follow system resolution, English fallback, live switching, reload persistence, settings search and anchors, rich messages, counts, and unchanged user/provider content. Native changes also need menu and cold-start checks with an isolated data home. A mocked dialog test does not prove a packaged app on another operating system.
+
+## Custom zh-CN Windows installer
+
+Official `production`, `beta`, and `remote` packaging is unchanged. The optional `--flavor zh-cn` custom installer is a separately labeled app:
+
+|                          | Official Synara               | Custom `zh-cn`                          |
+| ------------------------ | ----------------------------- | --------------------------------------- |
+| Display name             | Synara                        | Synara zh-CN                            |
+| `appId` / AppUserModelID | `com.emanueledipietro.synara` | `com.emanueledipietro.synara.zh-cn`     |
+| Windows NSIS GUID        | Stable GUID                   | `b7e4c1a9-2d58-4f0b-9c6e-8a13f5d20471`  |
+| Electron `userData`      | `synara`                      | `synara-zh-cn`                          |
+| Data home                | `~/.synara` (`SYNARA_HOME`)   | `~/.synara-zh-cn` (`SYNARA_ZH_CN_HOME`) |
+| Auto-update feed         | Official GitHub Releases      | None (`usesScriptedUpdates`)            |
+
+The custom installer can sit beside an official install. It does not replace the official uninstaller, does not write official `userData`, and does not disable official app updates. It does not copy or migrate official chats or settings. `SYNARA_HOME` is ignored so a shell used for Stable cannot open this profile. This flavor is unsigned unless a signing certificate is supplied at pack time.

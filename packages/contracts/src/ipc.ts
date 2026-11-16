@@ -521,7 +521,7 @@ export interface DesktopUpdateState {
   canRetry: boolean;
   installFailureCount: number;
   // Packaged app identity used by update controls and flavor-specific branding.
-  flavor: "production" | "beta" | "canary" | "cua" | "remote";
+  flavor: "production" | "beta" | "canary" | "cua" | "remote" | "zh-cn";
   // Public URL where the user can manually download the release when the
   // in-app updater cannot apply it (silent installer failure, unsigned build,
   // read-only install location, unsupported platform). Null when no GitHub
@@ -548,7 +548,7 @@ export interface DesktopBetaChannelState {
   /** False on web builds and unsupported probing environments. */
   readonly supported: boolean;
   /** Flavor of the running desktop app; the card only acts on "production". */
-  readonly flavor: "production" | "beta" | "canary" | "cua" | "remote";
+  readonly flavor: "production" | "beta" | "canary" | "cua" | "remote" | "zh-cn";
   readonly installed: boolean;
   readonly version: string | null;
   /** True when this platform can install beta in place (macOS today). */

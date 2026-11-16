@@ -30,6 +30,8 @@ import {
   MAC_ICON_COMPOSER_DEPLOYMENT_TARGET,
   MAC_WINDOW_MATERIAL_ADDON_STAGE_PATH,
   shouldDisablePackagedDesktopUpdateFeed,
+  shouldSkipNativeNpmRebuild,
+  stagedDesktopDependencyInstall,
   validateDesktopNativeBuildHost,
 } from "./lib/desktop-platform-build-config.ts";
 import { stageCloudflared } from "./lib/cloudflared.ts";
@@ -856,22 +858,29 @@ const installFrozenStageDependencies = Effect.fn("installFrozenStageDependencies
     // so use the equivalent dependency omission and allow only the temporary
     // staging copy to update; the verified source lockfile remains untouched.
     // Linux-hosted custom Windows NSIS builds must fetch win32 optional
-    // binaries; official releases still package on windows-2022.
-    const cpu = arch === "universal" ? "*" : arch;
+    // binaries; official releases still package on windows-2022. --os=win32 is
+    // Windows-target only and must never reach Linux/mac packaging.
+    const stagedInstall = stagedDesktopDependencyInstall({
+      platform,
+      arch,
+      hostPlatform: process.platform,
+    });
     const winInstall = ChildProcess.make({
       cwd: stageAppDir,
       ...commandOutputOptions(verbose),
       // Windows needs shell mode to resolve .cmd shims (e.g. bun.cmd).
       shell: process.platform === "win32",
     });
+    const cpu = arch === "universal" ? "*" : arch;
     yield* runCommand(
-      process.platform === "win32"
-        ? winInstall`bun install --omit=dev --ignore-scripts --linker hoisted`
-        : winInstall`bun install --omit=dev --ignore-scripts --linker hoisted --os=win32 --cpu=${cpu}`,
+      stagedInstall.windowsCrossHost
+        ? winInstall`bun install --omit=dev --ignore-scripts --linker hoisted --os=win32 --cpu=${cpu}`
+        : winInstall`bun install --omit=dev --ignore-scripts --linker hoisted`,
     );
   } else {
     // Optional per-CPU packages (Claude SDK, esbuild, msgpackr) must match the
     // target, not the host: release CI builds the Intel app on Apple Silicon.
+    // These --cpu flags are architecture selectors, not Windows cross-host flags.
     const cpu = arch === "universal" ? "*" : arch;
     yield* runCommand(
       ChildProcess.make({
@@ -925,7 +934,9 @@ const createBuildConfig = Effect.fn("createBuildConfig")(function* (
     // Official Windows NSIS builds run on windows-2022 and rebuild native
     // modules there. Linux-hosted custom packaging cannot cross-compile with
     // node-gyp; it uses the win32 optional binaries fetched for the target.
-    ...(platform === "win" && process.platform !== "win32" ? { npmRebuild: false } : {}),
+    ...(shouldSkipNativeNpmRebuild({ platform, hostPlatform: process.platform })
+      ? { npmRebuild: false }
+      : {}),
   };
   const publishConfig = resolveGitHubPublishConfig();
   if (

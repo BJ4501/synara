@@ -34,7 +34,7 @@ export const DesktopUpdateWireState = Schema.Struct({
   errorContext: Schema.NullOr(Schema.Literals(["check", "download", "install"])),
   canRetry: Schema.Boolean,
   installFailureCount: NonNegativeInt,
-  flavor: Schema.Literals(["production", "beta", "canary", "cua", "remote"]),
+  flavor: Schema.Literals(["production", "beta", "canary", "cua", "remote", "zh-cn"]),
   releaseUrl: Schema.NullOr(boundedTrimmedNonEmptyString(2_048)),
 });
 

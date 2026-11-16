@@ -51,6 +51,10 @@ export const SETTINGS_ROW_SOURCES: ReadonlyArray<{
     owners: { AppearanceSettingsView: "appearance", MessageTrailMicrophoneRow: "appearance" },
   },
   {
+    file: "src/components/settings/LanguageSettingsRow.tsx",
+    owners: { LanguageSettingsRow: "appearance" },
+  },
+  {
     file: "src/components/settings/views/ChatsSettingsView.tsx",
     owners: { ChatsSettingsView: "behavior" },
   },

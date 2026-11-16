@@ -31,6 +31,7 @@ import {
 } from "~/lib/accountLogic";
 import { cn } from "~/lib/utils";
 import { SIGN_IN_ACCENT_CLASS_NAME, SignInOrbit } from "./SignInOrbit";
+import { t, useTranslation } from "~/i18n";
 
 interface SignInDialogProps {
   readonly open: boolean;
@@ -93,15 +94,16 @@ const SSO_BUTTONS: readonly {
 
 /** "Not now" plus the Escape key that does the same, shared by both dialog steps. */
 function DismissRow(props: { onDismiss: () => void }) {
+  const { t } = useTranslation();
   return (
     <button
       type="button"
       className="flex items-center gap-2 self-center text-ui-sm text-muted-foreground hover:text-foreground"
       onClick={props.onDismiss}
     >
-      Not now
+      {t("common:notNow")}
       <Kbd aria-hidden className="h-5 bg-foreground/6 px-1.5 font-normal text-ui-xs">
-        esc
+        {t("common:esc")}
       </Kbd>
     </button>
   );
@@ -109,6 +111,7 @@ function DismissRow(props: { onDismiss: () => void }) {
 
 export function SignInPanel({ onSignedIn, onDismiss, variant = "dialog" }: SignInPanelProps) {
   const embedded = variant === "embedded";
+  const { t } = useTranslation();
   const account = useAccount();
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -208,8 +211,8 @@ export function SignInPanel({ onSignedIn, onDismiss, variant = "dialog" }: SignI
       setErrorFromSso(true);
       setError(
         isSignInCancellation(cause)
-          ? "Sign-in was interrupted. Try again."
-          : accountErrorMessage(cause, "Sign-in did not finish. Try again."),
+          ? t("common:signIn_interrupted")
+          : accountErrorMessage(cause, t("common:signIn_didNotFinish")),
       );
     } finally {
       if (ssoAbortRef.current === controller) ssoAbortRef.current = null;
@@ -241,7 +244,7 @@ export function SignInPanel({ onSignedIn, onDismiss, variant = "dialog" }: SignI
     setErrorFromSso(false);
     const trimmed = email.trim();
     if (trimmed.length === 0) {
-      setError("Enter your email.");
+      setError(t("common:signIn_enterEmail"));
       return;
     }
     try {
@@ -254,8 +257,8 @@ export function SignInPanel({ onSignedIn, onDismiss, variant = "dialog" }: SignI
       // provider may well have sent the code.
       setError(
         isSignInCancellation(cause)
-          ? "The connection restarted. Try again."
-          : accountErrorMessage(cause, "Could not send the code. Try again."),
+          ? t("common:signIn_connectionRestarted")
+          : accountErrorMessage(cause, t("common:signIn_couldNotSendCode")),
       );
     }
   };
@@ -296,11 +299,9 @@ export function SignInPanel({ onSignedIn, onDismiss, variant = "dialog" }: SignI
     <div className="flex flex-col items-center gap-3 py-2 text-center">
       <div className="flex items-center gap-2 text-ui text-muted-foreground">
         <Spinner className="size-3.5" />
-        <span>Waiting for your browser…</span>
+        <span>{t("common:signIn_waitingForBrowser")}</span>
       </div>
-      <p className="text-ui-sm text-muted-foreground">
-        Finish signing in with your provider, then return here.
-      </p>
+      <p className="text-ui-sm text-muted-foreground">{t("common:signIn_finishInProvider")}</p>
       <Button
         variant="ghost"
         size="xs"
@@ -313,11 +314,9 @@ export function SignInPanel({ onSignedIn, onDismiss, variant = "dialog" }: SignI
           setSsoWait(null);
         }}
       >
-        Stop waiting
+        {t("common:signIn_stopWaiting")}
       </Button>
-      <p className="text-ui-sm text-muted-foreground">
-        A page you already approved may still finish signing in.
-      </p>
+      <p className="text-ui-sm text-muted-foreground">{t("common:signIn_pageMayStillFinish")}</p>
     </div>
   ) : null;
 
@@ -332,7 +331,7 @@ export function SignInPanel({ onSignedIn, onDismiss, variant = "dialog" }: SignI
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-2.5 pb-1">
           <img src="/app-icons/dark.png" alt="" className="size-7 shrink-0" draggable={false} />
-          <SignInPanelTitle variant={variant}>Sign in to Synara</SignInPanelTitle>
+          <SignInPanelTitle variant={variant}>{t("common:signIn_title")}</SignInPanelTitle>
         </div>
         {ssoWaiting ?? (
           <>
@@ -346,7 +345,7 @@ export function SignInPanel({ onSignedIn, onDismiss, variant = "dialog" }: SignI
               onClick={() => void handleSso("apple")}
             >
               <SiApple className="size-3.5" />
-              Continue with Apple
+              {t("common:signIn_continueWith", { value0: "Apple" })}
             </Button>
             <div className="grid grid-cols-2 gap-2">
               <Button
@@ -384,7 +383,7 @@ export function SignInPanel({ onSignedIn, onDismiss, variant = "dialog" }: SignI
                   type="email"
                   autoComplete="email"
                   placeholder="you@company.com"
-                  aria-label="Email"
+                  aria-label={t("common:signIn_email")}
                   value={email}
                   disabled={busy}
                   aria-invalid={error !== null || undefined}
@@ -394,7 +393,7 @@ export function SignInPanel({ onSignedIn, onDismiss, variant = "dialog" }: SignI
                 <InputGroupAddon align="inline-end">
                   <Button type="submit" size="xs" shape="capsule" variant="subtle" disabled={busy}>
                     {account.sendOtp.isPending ? <Spinner className="size-3" /> : null}
-                    Send code
+                    {t("common:signIn_sendCode")}
                   </Button>
                 </InputGroupAddon>
               </InputGroup>
@@ -414,9 +413,9 @@ export function SignInPanel({ onSignedIn, onDismiss, variant = "dialog" }: SignI
       <SignInOrbit />
       <div className="flex flex-col gap-4 px-6 pb-5">
         <div className="flex flex-col items-center gap-1.5 pb-1 text-center">
-          <SignInPanelTitle variant={variant}>Sign in to Synara</SignInPanelTitle>
+          <SignInPanelTitle variant={variant}>{t("common:signIn_title")}</SignInPanelTitle>
           <p className="text-ui leading-snug text-muted-foreground">
-            Your profile and workspace, on every device.
+            {t("common:signIn_subtitle")}
           </p>
         </div>
 
@@ -437,8 +436,8 @@ export function SignInPanel({ onSignedIn, onDismiss, variant = "dialog" }: SignI
                 <InputGroupInput
                   type="email"
                   autoComplete="email"
-                  placeholder="Email address"
-                  aria-label="Email"
+                  placeholder={t("common:signIn_emailAddress")}
+                  aria-label={t("common:signIn_email")}
                   className="caret-[var(--sign-in-accent)]"
                   value={email}
                   // Read-only, not disabled, while busy: a disabled field drops
@@ -455,7 +454,7 @@ export function SignInPanel({ onSignedIn, onDismiss, variant = "dialog" }: SignI
                     disabled={busy}
                   >
                     {account.sendOtp.isPending ? <Spinner className="size-3.5" /> : null}
-                    Send code
+                    {t("common:signIn_sendCode")}
                     <Kbd
                       aria-hidden
                       className="h-5 bg-primary-foreground/12 px-1.5 text-ui-xs text-primary-foreground/70"
@@ -479,7 +478,7 @@ export function SignInPanel({ onSignedIn, onDismiss, variant = "dialog" }: SignI
                   key={provider}
                   variant="outline"
                   size="lg"
-                  aria-label={`Continue with ${label}`}
+                  aria-label={t("common:signIn_continueWith", { value0: label })}
                   className="h-10.5 rounded-xl bg-foreground/3 sm:h-10.5"
                   disabled={busy}
                   onClick={() => void handleSso(provider)}
@@ -557,8 +556,8 @@ function useCodeEntry({
       inputRef.current?.focus();
       setError(
         readAccountErrorCode(cause) === "invalid_verification_code"
-          ? "That code didn't work — try again or resend"
-          : accountErrorMessage(cause, "Could not sign you in. Try again."),
+          ? t("common:signIn_codeDidntWork")
+          : accountErrorMessage(cause, t("common:signIn_couldNotSignIn")),
       );
     }
   };
@@ -580,7 +579,7 @@ function useCodeEntry({
       setResendAvailableAtMs(Date.now() + RESEND_COOLDOWN_SECONDS * 1000);
       inputRef.current?.focus();
     } catch (cause) {
-      setError(accountErrorMessage(cause, "Could not resend the code. Try again in a minute."));
+      setError(accountErrorMessage(cause, t("common:signIn_couldNotResend")));
     }
   };
 
@@ -646,7 +645,7 @@ function CodeInput(props: {
         // loses focus, so a wrong code would leave nothing to type into.
         readOnly={submitting}
         aria-busy={submitting || undefined}
-        aria-label="Sign-in code"
+        aria-label={t("common:signIn_codeLabel")}
         aria-invalid={entry.error !== null || undefined}
         aria-describedby={entry.error !== null ? entry.errorId : undefined}
         // The code field is the only thing to type into on this step.
@@ -716,15 +715,16 @@ function DialogCodeEntryStep({
   onUseDifferentEmail,
   onDismiss,
 }: CodeEntryStepProps & { readonly onDismiss?: (() => void) | undefined }) {
+  const { t } = useTranslation();
   const entry = useCodeEntry({ submitting, resending, onSubmit, onResend });
   return (
     <div className={cn("flex flex-col", SIGN_IN_ACCENT_CLASS_NAME)}>
       <SignInOrbit mail />
       <div className="flex flex-col gap-4 px-6 pb-5">
         <div className="flex flex-col items-center gap-1.5 pb-1 text-center">
-          <SignInPanelTitle variant="dialog">Check your email</SignInPanelTitle>
+          <SignInPanelTitle variant="dialog">{t("common:signIn_checkEmail")}</SignInPanelTitle>
           <p className="text-ui leading-snug text-muted-foreground">
-            {entry.resent ? "New code sent to " : "Code sent to "}
+            {entry.resent ? t("common:signIn_newCodeSentTo") : t("common:signIn_codeSentTo")}{" "}
             <span className="text-foreground">{email}</span>
             {" · "}
             <button
@@ -732,7 +732,7 @@ function DialogCodeEntryStep({
               className="text-[var(--sign-in-accent)] underline-offset-2 hover:underline"
               onClick={onUseDifferentEmail}
             >
-              Change email
+              {t("common:signIn_changeEmail")}
             </button>
           </p>
         </div>
@@ -753,10 +753,10 @@ function DialogCodeEntryStep({
             {submitting ? (
               <>
                 <Spinner className="size-3.5" />
-                Signing you in…
+                {t("common:signIn_signingYouIn")}
               </>
             ) : (
-              "Paste works too."
+              t("common:signIn_pasteWorksToo")
             )}
           </p>
           <Button
@@ -766,7 +766,7 @@ function DialogCodeEntryStep({
             disabled={entry.resendDisabled}
             onClick={() => void entry.handleResend()}
           >
-            Resend
+            {t("common:signIn_resend")}
             {entry.cooldownSecondsLeft > 0 ? (
               <span className="font-mono text-ui-xs text-muted-foreground tabular-nums">
                 {formatResendCountdown(entry.cooldownSecondsLeft)}
@@ -793,20 +793,17 @@ function CodeEntryStep({
   onResend,
   onUseDifferentEmail,
 }: CodeEntryStepProps) {
+  const { t } = useTranslation();
   const entry = useCodeEntry({ submitting, resending, onSubmit, onResend });
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col items-center gap-3 text-center">
         <SynaraLogo className="size-8" />
-        <SignInPanelTitle variant="embedded">Check your email</SignInPanelTitle>
+        <SignInPanelTitle variant="embedded">{t("common:signIn_checkEmail")}</SignInPanelTitle>
         <p className="text-ui leading-snug text-muted-foreground">
-          {entry.resent ? (
-            "New code sent"
-          ) : (
-            <>
-              We sent a 6-digit code to <span className="text-foreground">{email}</span>
-            </>
-          )}
+          {entry.resent
+            ? t("common:signIn_newCodeSent")
+            : t("common:signIn_weSentCodeTo", { value0: email })}
         </p>
       </div>
 
@@ -822,19 +819,19 @@ function CodeEntryStep({
 
         <Button type="submit" className="mt-1 w-full" disabled={!entry.complete || submitting}>
           {submitting ? <Spinner className="size-3.5" /> : null}
-          Verify
+          {t("common:signIn_verify")}
         </Button>
       </form>
 
       <p className="text-center text-ui-sm text-muted-foreground">
-        Didn't get it?{" "}
+        {t("common:signIn_didntGetIt")}{" "}
         <button
           type="button"
           className="underline underline-offset-2 enabled:hover:text-foreground disabled:no-underline disabled:opacity-64"
           disabled={entry.resendDisabled}
           onClick={() => void entry.handleResend()}
         >
-          Resend code
+          {t("common:signIn_resendCode")}
           {entry.cooldownSecondsLeft > 0
             ? ` (${formatResendCountdown(entry.cooldownSecondsLeft)})`
             : ""}
@@ -846,7 +843,7 @@ function CodeEntryStep({
         className="self-center text-ui-sm text-muted-foreground hover:text-foreground"
         onClick={onUseDifferentEmail}
       >
-        Use a different email
+        {t("common:signIn_useDifferentEmail")}
       </button>
     </div>
   );

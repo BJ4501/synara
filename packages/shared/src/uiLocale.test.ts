@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { normalizeLanguagePreference, resolveUiLocale } from "./uiLocale";
+import { normalizeLanguagePreference, resolveFormatLocale, resolveUiLocale } from "./uiLocale";
 
 describe("interface locale resolution", () => {
   it.each(["zh", "zh-CN", "zh-SG", "zh-Hans", "zh-Hans-CN", "zh-Hans-TW", "ZH-hans-sg"])(
@@ -26,6 +26,16 @@ describe("interface locale resolution", () => {
     expect(resolveUiLocale("system", [])).toBe("en");
     expect(resolveUiLocale("zh-CN", ["en-US"])).toBe("zh-CN");
     expect(resolveUiLocale("en", ["zh-CN"])).toBe("en");
+  });
+
+  it("keeps Follow system date and number formats on the platform regional tag", () => {
+    expect(resolveFormatLocale("system", ["en-GB", "en-US"])).toBe("en-GB");
+    expect(resolveFormatLocale("system", ["zh-TW"])).toBe("zh-TW");
+    expect(resolveFormatLocale("system", ["zh-Hant-TW", "en-US"])).toBe("zh-Hant-TW");
+    expect(resolveFormatLocale("system", ["zh-Hans-CN"])).toBe("zh-Hans-CN");
+    expect(resolveFormatLocale("system", ["zh-SG"])).toBe("zh-SG");
+    expect(resolveFormatLocale("en", ["en-GB"])).toBe("en");
+    expect(resolveFormatLocale("zh-CN", ["zh-TW"])).toBe("zh-CN");
   });
 
   it("accepts only persisted preference identifiers rather than arbitrary locale aliases", () => {
